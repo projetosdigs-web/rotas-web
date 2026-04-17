@@ -91,166 +91,329 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
     <div
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(180deg, #eff6ff 0%, #f8fafc 100%)",
-        padding: "32px 20px",
+        background:
+          "linear-gradient(180deg, #eff6ff 0%, #f8fafc 45%, #ffffff 100%)",
+        padding: "28px 18px 48px",
         fontFamily: "Arial, sans-serif",
       }}
     >
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+      <div style={{ maxWidth: 1180, margin: "0 auto" }}>
         <div
           style={{
-            background: "#ffffff",
-            borderRadius: 24,
-            padding: 28,
-            boxShadow: "0 10px 35px rgba(15, 23, 42, 0.08)",
-            border: "1px solid #e2e8f0",
+            display: "grid",
+            gridTemplateColumns: "1.3fr 0.9fr",
+            gap: 24,
+            alignItems: "stretch",
             marginBottom: 24,
           }}
         >
-          <div style={{ marginBottom: 20 }}>
+          <div
+            style={{
+              background: "rgba(255,255,255,0.9)",
+              backdropFilter: "blur(8px)",
+              borderRadius: 28,
+              padding: 32,
+              boxShadow: "0 18px 45px rgba(15,23,42,0.08)",
+              border: "1px solid #e2e8f0",
+            }}
+          >
             <div
               style={{
-                display: "inline-block",
-                padding: "6px 12px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "8px 14px",
                 borderRadius: 999,
                 background: "#dbeafe",
                 color: "#1d4ed8",
                 fontSize: 13,
                 fontWeight: "bold",
-                marginBottom: 12,
+                marginBottom: 18,
               }}
             >
-              Consulta para vendedores
+              Consulta premium para vendedores
             </div>
 
             <h1
               style={{
                 margin: 0,
-                fontSize: 36,
+                fontSize: 46,
+                lineHeight: 1.05,
                 color: "#0f172a",
-                lineHeight: 1.1,
+                maxWidth: 700,
               }}
             >
-              Consulta de Atendimento
+              Descubra sua rota de atendimento em segundos
             </h1>
 
             <p
               style={{
-                marginTop: 10,
+                marginTop: 16,
                 marginBottom: 0,
                 color: "#475569",
-                fontSize: 16,
+                fontSize: 18,
+                lineHeight: 1.6,
+                maxWidth: 760,
               }}
             >
-              Digite a cidade ou o bairro para localizar a rota, o dia e o veículo responsável.
+              Consulte por cidade ou bairro e encontre rapidamente a rota, o dia
+              de atendimento e o veículo responsável.
             </p>
+
+            <div
+              style={{
+                marginTop: 28,
+                display: "flex",
+                gap: 12,
+                flexWrap: "wrap",
+              }}
+            >
+              <input
+                type="text"
+                placeholder="Ex.: Jundiaí ou Vila Rami"
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") buscar();
+                }}
+                style={{
+                  flex: 1,
+                  minWidth: 280,
+                  padding: "18px 18px",
+                  borderRadius: 16,
+                  border: "1px solid #cbd5e1",
+                  fontSize: 16,
+                  outline: "none",
+                  background: "#fff",
+                  color: "#0f172a",
+                  boxShadow: "inset 0 1px 2px rgba(15,23,42,0.04)",
+                }}
+              />
+
+              <button
+                onClick={buscar}
+                disabled={loading}
+                style={{
+                  padding: "18px 22px",
+                  borderRadius: 16,
+                  border: "none",
+                  background: "#2563eb",
+                  color: "#fff",
+                  fontSize: 16,
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                  minWidth: 130,
+                  boxShadow: "0 10px 24px rgba(37,99,235,0.28)",
+                }}
+              >
+                {loading ? "Buscando..." : "Buscar"}
+              </button>
+
+              <button
+                onClick={limparBusca}
+                style={{
+                  padding: "18px 22px",
+                  borderRadius: 16,
+                  border: "1px solid #cbd5e1",
+                  background: "#fff",
+                  color: "#0f172a",
+                  fontSize: 16,
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                  minWidth: 120,
+                }}
+              >
+                Limpar
+              </button>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                flexWrap: "wrap",
+                marginTop: 18,
+              }}
+            >
+              <a href="/rotas-dia" style={{ textDecoration: "none" }}>
+                <button
+                  style={{
+                    padding: "13px 18px",
+                    borderRadius: 14,
+                    border: "1px solid #dbeafe",
+                    background: "#eff6ff",
+                    color: "#1d4ed8",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                  }}
+                >
+                  Ver Rotas do Dia
+                </button>
+              </a>
+
+              <a href="/login" style={{ textDecoration: "none" }}>
+                <button
+                  style={{
+                    padding: "13px 18px",
+                    borderRadius: 14,
+                    border: "1px solid #e2e8f0",
+                    background: "#f8fafc",
+                    color: "#334155",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                  }}
+                >
+                  Acesso Administrativo
+                </button>
+              </a>
+            </div>
           </div>
 
           <div
             style={{
+              background:
+                "linear-gradient(135deg, #2563eb 0%, #1d4ed8 45%, #0f172a 100%)",
+              color: "#fff",
+              borderRadius: 28,
+              padding: 28,
+              boxShadow: "0 18px 45px rgba(37,99,235,0.18)",
               display: "flex",
-              gap: 12,
-              flexWrap: "wrap",
-              alignItems: "center",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              minHeight: 320,
             }}
           >
-            <input
-              type="text"
-              placeholder="Ex.: Jundiaí ou Vila Rami"
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") buscar();
-              }}
-              style={{
-                flex: 1,
-                minWidth: 280,
-                padding: "16px 18px",
-                borderRadius: 14,
-                border: "1px solid #cbd5e1",
-                fontSize: 16,
-                outline: "none",
-                background: "#fff",
-                color: "#0f172a",
-              }}
-            />
-
-            <button
-              onClick={buscar}
-              disabled={loading}
-              style={{
-                padding: "16px 20px",
-                borderRadius: 14,
-                border: "none",
-                background: "#2563eb",
-                color: "#fff",
-                fontSize: 15,
-                fontWeight: "bold",
-                cursor: "pointer",
-                minWidth: 120,
-                boxShadow: "0 8px 18px rgba(37, 99, 235, 0.25)",
-              }}
-            >
-              {loading ? "Buscando..." : "Buscar"}
-            </button>
-
-            <button
-              onClick={limparBusca}
-              style={{
-                padding: "16px 20px",
-                borderRadius: 14,
-                border: "1px solid #cbd5e1",
-                background: "#fff",
-                color: "#0f172a",
-                fontSize: 15,
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              Limpar
-            </button>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              gap: 12,
-              flexWrap: "wrap",
-              marginTop: 18,
-            }}
-          >
-            <a href="/rotas-dia" style={{ textDecoration: "none" }}>
-              <button
+            <div>
+              <div
                 style={{
-                  padding: "12px 16px",
-                  borderRadius: 12,
-                  border: "1px solid #dbeafe",
-                  background: "#eff6ff",
-                  color: "#1d4ed8",
+                  fontSize: 14,
                   fontWeight: "bold",
-                  cursor: "pointer",
+                  letterSpacing: 0.5,
+                  textTransform: "uppercase",
+                  opacity: 0.85,
+                  marginBottom: 12,
                 }}
               >
-                Ver Rotas do Dia
-              </button>
-            </a>
+                Rotas Mobile
+              </div>
 
-            <a href="/login" style={{ textDecoration: "none" }}>
-              <button
+              <div
                 style={{
-                  padding: "12px 16px",
-                  borderRadius: 12,
-                  border: "1px solid #e2e8f0",
-                  background: "#f8fafc",
-                  color: "#334155",
+                  fontSize: 30,
                   fontWeight: "bold",
-                  cursor: "pointer",
+                  lineHeight: 1.15,
+                  marginBottom: 14,
                 }}
               >
-                Acesso Administrativo
-              </button>
-            </a>
+                Sistema inteligente de consulta comercial
+              </div>
+
+              <p
+                style={{
+                  margin: 0,
+                  opacity: 0.9,
+                  lineHeight: 1.7,
+                  fontSize: 16,
+                }}
+              >
+                Visualize rapidamente cobertura regional, dia de atendimento e
+                veículo responsável por cada rota.
+              </p>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 12,
+                marginTop: 24,
+              }}
+            >
+              {[
+                { label: "Busca", value: "Rápida" },
+                { label: "Consulta", value: "Inteligente" },
+                { label: "Mapa", value: "Integrado" },
+                { label: "Uso", value: "Mobile" },
+              ].map((item, index) => (
+                <div
+                  key={index}
+                  style={{
+                    background: "rgba(255,255,255,0.12)",
+                    border: "1px solid rgba(255,255,255,0.18)",
+                    borderRadius: 18,
+                    padding: 16,
+                  }}
+                >
+                  <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 6 }}>
+                    {item.label}
+                  </div>
+                  <div style={{ fontSize: 20, fontWeight: "bold" }}>
+                    {item.value}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: 16,
+            marginBottom: 26,
+          }}
+        >
+          {[
+            {
+              title: "Consulta rápida",
+              text: "Encontre a rota e o dia de atendimento com poucos cliques.",
+            },
+            {
+              title: "Cobertura regional",
+              text: "Veja bairros, cidades e pontos atendidos por cada rota.",
+            },
+            {
+              title: "Uso comercial",
+              text: "Ideal para vendedores e equipes externas em campo.",
+            },
+            {
+              title: "Mapa integrado",
+              text: "Visualize no mapa os locais encontrados na busca.",
+            },
+          ].map((item, index) => (
+            <div
+              key={index}
+              style={{
+                background: "#ffffff",
+                borderRadius: 22,
+                padding: 22,
+                border: "1px solid #e2e8f0",
+                boxShadow: "0 10px 30px rgba(15,23,42,0.05)",
+              }}
+            >
+              <div
+                style={{
+                  fontWeight: "bold",
+                  fontSize: 20,
+                  color: "#0f172a",
+                  marginBottom: 10,
+                }}
+              >
+                {item.title}
+              </div>
+
+              <div
+                style={{
+                  color: "#475569",
+                  lineHeight: 1.65,
+                  fontSize: 15,
+                }}
+              >
+                {item.text}
+              </div>
+            </div>
+          ))}
         </div>
 
         {!loading && infoBusca && (
@@ -259,7 +422,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
               background: "#ffffff",
               borderRadius: 18,
               padding: 18,
-              boxShadow: "0 10px 25px rgba(15, 23, 42, 0.05)",
+              boxShadow: "0 10px 25px rgba(15,23,42,0.05)",
               border: "1px solid #e2e8f0",
               marginBottom: 20,
             }}
@@ -273,13 +436,15 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
           </div>
         )}
 
+        {!loading && resultado.length > 0 && <MapaRotas dados={resultado} />}
+
         {loading && (
           <div
             style={{
               background: "#ffffff",
               borderRadius: 18,
               padding: 24,
-              boxShadow: "0 10px 25px rgba(15, 23, 42, 0.05)",
+              boxShadow: "0 10px 25px rgba(15,23,42,0.05)",
               border: "1px solid #e2e8f0",
             }}
           >
@@ -295,7 +460,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
               background: "#ffffff",
               borderRadius: 18,
               padding: 24,
-              boxShadow: "0 10px 25px rgba(15, 23, 42, 0.05)",
+              boxShadow: "0 10px 25px rgba(15,23,42,0.05)",
               border: "1px solid #e2e8f0",
             }}
           >
@@ -304,8 +469,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
             </p>
           </div>
         )}
-        
-        <MapaRotas dados={resultado} />
+
         {!loading && resultado.length > 0 && (
           <div
             style={{
@@ -321,7 +485,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                   background: "#ffffff",
                   borderRadius: 22,
                   padding: 22,
-                  boxShadow: "0 10px 30px rgba(15, 23, 42, 0.08)",
+                  boxShadow: "0 10px 30px rgba(15,23,42,0.08)",
                   border: "1px solid #e2e8f0",
                   position: "relative",
                   overflow: "hidden",
