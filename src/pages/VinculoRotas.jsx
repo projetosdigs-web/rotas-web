@@ -37,6 +37,19 @@ export default function VinculoRotas() {
 
   const [loading, setLoading] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    function resize() {
+      setIsMobile(window.innerWidth <= 768);
+    }
+
+    resize();
+    window.addEventListener("resize", resize);
+    carregarTudo();
+
+    return () => window.removeEventListener("resize", resize);
+  }, []);
 
   async function carregarTudo() {
     try {
@@ -56,7 +69,6 @@ export default function VinculoRotas() {
       setVehicles(v.data || []);
       setVinculos(vc.data || []);
     } catch (err) {
-      console.error("Erro ao carregar dados:", err);
       alert("Erro ao carregar dados dos vínculos");
     } finally {
       setLoading(false);
@@ -64,7 +76,7 @@ export default function VinculoRotas() {
   }
 
   async function criarVinculo() {
-    if (!routeId || !cityId || !neighborhoodId || !vehicleId || !weekday) {
+    if (!routeId || !cityId || !neighborhoodId || !vehicleId || weekday === "") {
       alert("Preencha todos os campos");
       return;
     }
@@ -86,31 +98,25 @@ export default function VinculoRotas() {
       setVehicleId("");
       setWeekday("");
 
-      await carregarTudo();
+      carregarTudo();
     } catch (err) {
-      console.error("Erro ao criar vínculo:", err);
       alert("Erro ao criar vínculo");
     } finally {
       setSalvando(false);
     }
   }
 
-  async function deletarVinculo(id) {
-    const confirmar = window.confirm("Deseja excluir esse vínculo?");
-    if (!confirmar) return;
+  async function excluir(id) {
+    const ok = window.confirm("Deseja excluir esse vínculo?");
+    if (!ok) return;
 
     try {
       await api.delete(`/route-city-day/${id}`);
-      await carregarTudo();
-    } catch (err) {
-      console.error("Erro ao excluir vínculo:", err);
+      carregarTudo();
+    } catch {
       alert("Erro ao excluir vínculo");
     }
   }
-
-  useEffect(() => {
-    carregarTudo();
-  }, []);
 
   const bairrosFiltrados = neighborhoods.filter(
     (n) => !cityId || n.city_id === Number(cityId)
@@ -121,19 +127,19 @@ export default function VinculoRotas() {
       style={{
         minHeight: "100vh",
         background:
-          "linear-gradient(180deg, #eff6ff 0%, #f8fafc 45%, #ffffff 100%)",
-        padding: "28px 18px 48px",
+          "linear-gradient(180deg, #f8f7fc 0%, #fff8f2 45%, #ffffff 100%)",
+        padding: isMobile ? "18px 12px 36px" : "28px 18px 48px",
         fontFamily: "Arial, sans-serif",
       }}
     >
-      <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         <div
           style={{
-            background: "#ffffff",
+            background: "#fff",
             borderRadius: 28,
-            padding: 30,
+            padding: isMobile ? 20 : 30,
             boxShadow: "0 18px 45px rgba(15,23,42,0.08)",
-            border: "1px solid #e2e8f0",
+            border: "1px solid #ece8f7",
             marginBottom: 24,
           }}
         >
@@ -142,21 +148,20 @@ export default function VinculoRotas() {
               display: "inline-flex",
               padding: "8px 14px",
               borderRadius: 999,
-              background: "#dbeafe",
-              color: "#1d4ed8",
+              background: "#efeafd",
+              color: "#403d7c",
               fontSize: 13,
               fontWeight: "bold",
               marginBottom: 18,
             }}
           >
-            Configuração operacional
+            Ferperez • Configuração
           </div>
 
           <h1
             style={{
               margin: 0,
-              fontSize: 40,
-              lineHeight: 1.1,
+              fontSize: isMobile ? 28 : 38,
               color: "#0f172a",
             }}
           >
@@ -165,23 +170,25 @@ export default function VinculoRotas() {
 
           <p
             style={{
-              marginTop: 12,
-              color: "#475569",
-              fontSize: 17,
+              marginTop: 10,
+              color: "#64748b",
+              fontSize: 15,
               lineHeight: 1.6,
-              maxWidth: 860,
+              maxWidth: 820,
             }}
           >
-            Relacione rota, cidade, bairro, dia de atendimento e veículo para
-            montar a lógica operacional do sistema.
+            Relacione rota, cidade, bairro, dia e veículo para montar a lógica
+            operacional da Ferperez RotaCerta.
           </p>
 
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gridTemplateColumns: isMobile
+                ? "1fr"
+                : "repeat(auto-fit, minmax(220px, 1fr))",
               gap: 12,
-              marginTop: 24,
+              marginTop: 22,
             }}
           >
             <select
@@ -190,10 +197,10 @@ export default function VinculoRotas() {
               style={{
                 padding: "16px 18px",
                 borderRadius: 16,
-                border: "1px solid #cbd5e1",
+                border: "1px solid #ddd6f5",
                 fontSize: 16,
                 background: "#fff",
-                color: "#0f172a",
+                outline: "none",
               }}
             >
               <option value="">Selecione a rota</option>
@@ -213,10 +220,10 @@ export default function VinculoRotas() {
               style={{
                 padding: "16px 18px",
                 borderRadius: 16,
-                border: "1px solid #cbd5e1",
+                border: "1px solid #ddd6f5",
                 fontSize: 16,
                 background: "#fff",
-                color: "#0f172a",
+                outline: "none",
               }}
             >
               <option value="">Selecione a cidade</option>
@@ -233,10 +240,10 @@ export default function VinculoRotas() {
               style={{
                 padding: "16px 18px",
                 borderRadius: 16,
-                border: "1px solid #cbd5e1",
+                border: "1px solid #ddd6f5",
                 fontSize: 16,
                 background: "#fff",
-                color: "#0f172a",
+                outline: "none",
               }}
             >
               <option value="">Selecione o bairro</option>
@@ -253,10 +260,10 @@ export default function VinculoRotas() {
               style={{
                 padding: "16px 18px",
                 borderRadius: 16,
-                border: "1px solid #cbd5e1",
+                border: "1px solid #ddd6f5",
                 fontSize: 16,
                 background: "#fff",
-                color: "#0f172a",
+                outline: "none",
               }}
             >
               <option value="">Selecione o veículo</option>
@@ -273,10 +280,10 @@ export default function VinculoRotas() {
               style={{
                 padding: "16px 18px",
                 borderRadius: 16,
-                border: "1px solid #cbd5e1",
+                border: "1px solid #ddd6f5",
                 fontSize: 16,
                 background: "#fff",
-                color: "#0f172a",
+                outline: "none",
               }}
             >
               <option value="">Selecione o dia</option>
@@ -295,154 +302,68 @@ export default function VinculoRotas() {
                 padding: "16px 22px",
                 borderRadius: 16,
                 border: "none",
-                background: "#2563eb",
+                background: "#403d7c",
                 color: "#fff",
-                fontSize: 16,
                 fontWeight: "bold",
                 cursor: "pointer",
-                minWidth: 160,
-                boxShadow: "0 10px 24px rgba(37,99,235,0.28)",
+                minWidth: isMobile ? "100%" : 150,
               }}
             >
-              {salvando ? "Criando..." : "Criar vínculo"}
+              {salvando ? "Salvando..." : "Criar vínculo"}
             </button>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              gap: 12,
-              flexWrap: "wrap",
-              marginTop: 18,
-            }}
-          >
-            <a href="/dashboard" style={{ textDecoration: "none" }}>
-              <button
-                style={{
-                  padding: "13px 18px",
-                  borderRadius: 14,
-                  border: "1px solid #e2e8f0",
-                  background: "#f8fafc",
-                  color: "#334155",
-                  fontWeight: "bold",
-                  cursor: "pointer",
-                }}
-              >
-                Voltar ao Painel
-              </button>
-            </a>
           </div>
         </div>
 
         <div
           style={{
-            background: "#ffffff",
-            borderRadius: 22,
-            padding: 24,
-            boxShadow: "0 10px 30px rgba(15,23,42,0.08)",
-            border: "1px solid #e2e8f0",
+            background: "#fff",
+            borderRadius: 24,
+            padding: isMobile ? 18 : 24,
+            border: "1px solid #ece8f7",
+            boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
           }}
         >
-          <div
+          <h2
             style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
-              flexWrap: "wrap",
-              marginBottom: 18,
+              marginTop: 0,
+              color: "#0f172a",
+              fontSize: 24,
             }}
           >
-            <div>
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: 26,
-                  color: "#0f172a",
-                }}
-              >
-                Vínculos cadastrados
-              </h2>
-
-              <p
-                style={{
-                  margin: "8px 0 0",
-                  color: "#64748b",
-                  fontSize: 15,
-                }}
-              >
-                Total de vínculos: <strong>{vinculos.length}</strong>
-              </p>
-            </div>
-          </div>
+            Vínculos cadastrados
+          </h2>
 
           {loading ? (
-            <div
-              style={{
-                background: "#f8fafc",
-                borderRadius: 16,
-                padding: 20,
-                border: "1px solid #e2e8f0",
-                color: "#334155",
-              }}
-            >
-              Carregando vínculos...
-            </div>
+            <p style={{ color: "#64748b" }}>Carregando...</p>
           ) : vinculos.length === 0 ? (
-            <div
-              style={{
-                background: "#f8fafc",
-                borderRadius: 16,
-                padding: 20,
-                border: "1px solid #e2e8f0",
-                color: "#334155",
-              }}
-            >
-              Nenhum vínculo cadastrado.
-            </div>
+            <p style={{ color: "#64748b" }}>Nenhum vínculo cadastrado.</p>
           ) : (
-            <div style={{ display: "grid", gap: 14 }}>
-              {vinculos.map((vinculo, index) => (
+            <div style={{ display: "grid", gap: 12 }}>
+              {vinculos.map((item, i) => (
                 <div
-                  key={vinculo.id}
+                  key={item.id}
                   style={{
-                    background: "#ffffff",
+                    background: "#faf9fd",
+                    border: "1px solid #ece8f7",
                     borderRadius: 18,
                     padding: 18,
-                    border: "1px solid #e2e8f0",
-                    boxShadow: "0 6px 18px rgba(15,23,42,0.05)",
                     display: "flex",
+                    flexDirection: isMobile ? "column" : "row",
                     justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: 14,
-                    flexWrap: "wrap",
-                    position: "relative",
-                    overflow: "hidden",
+                    alignItems: isMobile ? "stretch" : "center",
+                    gap: 12,
                   }}
                 >
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: 6,
-                      height: "100%",
-                      background: "#0f172a",
-                    }}
-                  />
-
-                  <div style={{ paddingLeft: 10 }}>
+                  <div>
                     <div
                       style={{
                         fontSize: 13,
                         color: "#64748b",
                         fontWeight: "bold",
-                        textTransform: "uppercase",
-                        letterSpacing: 0.5,
-                        marginBottom: 6,
+                        marginBottom: 4,
                       }}
                     >
-                      Vínculo #{index + 1}
+                      Vínculo #{i + 1}
                     </div>
 
                     <div
@@ -450,46 +371,39 @@ export default function VinculoRotas() {
                         fontSize: 22,
                         fontWeight: "bold",
                         color: "#0f172a",
-                        lineHeight: 1.2,
                         marginBottom: 8,
                       }}
                     >
-                      {vinculo.route_name || "-"}
+                      {item.route_name || "-"}
                     </div>
 
-                    <div
-                      style={{
-                        fontSize: 15,
-                        color: "#475569",
-                        lineHeight: 1.7,
-                      }}
-                    >
+                    <div style={{ fontSize: 15, color: "#64748b", lineHeight: 1.7 }}>
                       <div>
-                        Cidade: <strong>{vinculo.city_name || "-"}</strong>
+                        Cidade: <strong>{item.city_name || "-"}</strong>
                       </div>
                       <div>
-                        Bairro: <strong>{vinculo.neighborhood_name || "-"}</strong>
+                        Bairro: <strong>{item.neighborhood_name || "-"}</strong>
                       </div>
                       <div>
-                        Dia: <strong>{traduzirDia(vinculo.weekday)}</strong>
+                        Dia: <strong>{traduzirDia(item.weekday)}</strong>
                       </div>
                       <div>
-                        Veículo: <strong>{vinculo.vehicle_name || "-"}</strong>
+                        Veículo: <strong>{item.vehicle_name || "-"}</strong>
                       </div>
                     </div>
                   </div>
 
                   <button
-                    onClick={() => deletarVinculo(vinculo.id)}
+                    onClick={() => excluir(item.id)}
                     style={{
                       padding: "12px 16px",
-                      borderRadius: 12,
+                      borderRadius: 14,
                       border: "none",
-                      background: "#dc2626",
+                      background: "#ed823c",
                       color: "#fff",
                       fontWeight: "bold",
                       cursor: "pointer",
-                      boxShadow: "0 8px 18px rgba(220,38,38,0.18)",
+                      minWidth: isMobile ? "100%" : 120,
                     }}
                   >
                     Excluir
@@ -498,6 +412,24 @@ export default function VinculoRotas() {
               ))}
             </div>
           )}
+
+          <a href="/dashboard" style={{ textDecoration: "none" }}>
+            <button
+              style={{
+                marginTop: 18,
+                width: isMobile ? "100%" : "auto",
+                padding: "14px 18px",
+                borderRadius: 14,
+                border: "1px solid #ece8f7",
+                background: "#fff",
+                color: "#403d7c",
+                fontWeight: "bold",
+                cursor: "pointer",
+              }}
+            >
+              Voltar ao painel
+            </button>
+          </a>
         </div>
       </div>
     </div>
