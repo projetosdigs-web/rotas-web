@@ -1,7 +1,19 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    function handleResize() {
+      setIsMobile(window.innerWidth <= 768);
+    }
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   function logout() {
     localStorage.removeItem("token");
@@ -70,7 +82,7 @@ export default function Dashboard() {
         minHeight: "100vh",
         background:
           "linear-gradient(180deg, #eff6ff 0%, #f8fafc 45%, #ffffff 100%)",
-        padding: "28px 18px 48px",
+        padding: isMobile ? "18px 12px 36px" : "28px 18px 48px",
         fontFamily: "Arial, sans-serif",
       }}
     >
@@ -78,8 +90,8 @@ export default function Dashboard() {
         <div
           style={{
             background: "#ffffff",
-            borderRadius: 28,
-            padding: 30,
+            borderRadius: isMobile ? 20 : 28,
+            padding: isMobile ? 20 : 30,
             boxShadow: "0 18px 45px rgba(15,23,42,0.08)",
             border: "1px solid #e2e8f0",
             marginBottom: 24,
@@ -103,7 +115,7 @@ export default function Dashboard() {
           <h1
             style={{
               margin: 0,
-              fontSize: 40,
+              fontSize: isMobile ? 30 : 40,
               lineHeight: 1.1,
               color: "#0f172a",
             }}
@@ -115,7 +127,7 @@ export default function Dashboard() {
             style={{
               marginTop: 12,
               color: "#475569",
-              fontSize: 17,
+              fontSize: isMobile ? 15 : 17,
               lineHeight: 1.6,
               maxWidth: 800,
             }}
@@ -127,6 +139,7 @@ export default function Dashboard() {
           <div
             style={{
               display: "flex",
+              flexDirection: isMobile ? "column" : "row",
               gap: 12,
               flexWrap: "wrap",
               marginTop: 18,
@@ -135,6 +148,7 @@ export default function Dashboard() {
             <button
               onClick={() => ir("/consulta")}
               style={{
+                width: isMobile ? "100%" : "auto",
                 padding: "13px 18px",
                 borderRadius: 14,
                 border: "1px solid #dbeafe",
@@ -150,6 +164,7 @@ export default function Dashboard() {
             <button
               onClick={() => ir("/rotas-dia")}
               style={{
+                width: isMobile ? "100%" : "auto",
                 padding: "13px 18px",
                 borderRadius: 14,
                 border: "1px solid #e2e8f0",
@@ -167,7 +182,9 @@ export default function Dashboard() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gridTemplateColumns: isMobile
+              ? "1fr"
+              : "repeat(auto-fit, minmax(280px, 1fr))",
             gap: 18,
           }}
         >
@@ -178,7 +195,7 @@ export default function Dashboard() {
               style={{
                 background: "#ffffff",
                 borderRadius: 22,
-                padding: 22,
+                padding: isMobile ? 18 : 22,
                 boxShadow: "0 10px 30px rgba(15,23,42,0.08)",
                 border: "1px solid #e2e8f0",
                 cursor: "pointer",
@@ -187,14 +204,18 @@ export default function Dashboard() {
                 transition: "all 0.2s ease",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-4px)";
-                e.currentTarget.style.boxShadow =
-                  "0 16px 36px rgba(15,23,42,0.12)";
+                if (!isMobile) {
+                  e.currentTarget.style.transform = "translateY(-4px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 16px 36px rgba(15,23,42,0.12)";
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow =
-                  "0 10px 30px rgba(15,23,42,0.08)";
+                if (!isMobile) {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow =
+                    "0 10px 30px rgba(15,23,42,0.08)";
+                }
               }}
             >
               <div
@@ -224,7 +245,7 @@ export default function Dashboard() {
 
               <div
                 style={{
-                  fontSize: 28,
+                  fontSize: isMobile ? 24 : 28,
                   fontWeight: "bold",
                   color: "#0f172a",
                   lineHeight: 1.1,
@@ -251,6 +272,8 @@ export default function Dashboard() {
           <button
             onClick={logout}
             style={{
+              width: isMobile ? "100%" : "auto",
+              maxWidth: isMobile ? 320 : "none",
               padding: "15px 24px",
               borderRadius: 16,
               border: "none",
