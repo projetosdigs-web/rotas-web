@@ -61,75 +61,287 @@ export default function CadastroCidades() {
   }, []);
 
   return (
-    <div style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
-      <h1>Cadastro de Cidades</h1>
-
-      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-        <input
-          type="text"
-          placeholder="Nome da cidade"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
+    <div
+      style={{
+        minHeight: "100vh",
+        background:
+          "linear-gradient(180deg, #eff6ff 0%, #f8fafc 45%, #ffffff 100%)",
+        padding: "28px 18px 48px",
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
+      <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+        <div
           style={{
-            flex: 1,
-            padding: 10,
-            border: "1px solid #ccc",
-            borderRadius: 6,
-          }}
-        />
-
-        <button
-          onClick={criarCidade}
-          disabled={salvando}
-          style={{
-            padding: "10px 16px",
-            border: "none",
-            borderRadius: 6,
-            cursor: "pointer",
+            background: "#ffffff",
+            borderRadius: 28,
+            padding: 30,
+            boxShadow: "0 18px 45px rgba(15,23,42,0.08)",
+            border: "1px solid #e2e8f0",
+            marginBottom: 24,
           }}
         >
-          {salvando ? "Criando..." : "Criar"}
-        </button>
-      </div>
+          <div
+            style={{
+              display: "inline-flex",
+              padding: "8px 14px",
+              borderRadius: 999,
+              background: "#dbeafe",
+              color: "#1d4ed8",
+              fontSize: 13,
+              fontWeight: "bold",
+              marginBottom: 18,
+            }}
+          >
+            Cadastro administrativo
+          </div>
 
-      <h3>Cidades cadastradas</h3>
+          <h1
+            style={{
+              margin: 0,
+              fontSize: 40,
+              lineHeight: 1.1,
+              color: "#0f172a",
+            }}
+          >
+            Cadastro de Cidades
+          </h1>
 
-      {loading ? (
-        <p>Carregando cidades...</p>
-      ) : cidades.length === 0 ? (
-        <p>Nenhuma cidade cadastrada.</p>
-      ) : (
-        <div style={{ marginTop: 10 }}>
-          {cidades.map((c) => (
-            <div
-              key={c.id}
+          <p
+            style={{
+              marginTop: 12,
+              color: "#475569",
+              fontSize: 17,
+              lineHeight: 1.6,
+              maxWidth: 760,
+            }}
+          >
+            Cadastre e mantenha as cidades que fazem parte da cobertura de
+            atendimento do sistema.
+          </p>
+
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              flexWrap: "wrap",
+              marginTop: 24,
+            }}
+          >
+            <input
+              type="text"
+              placeholder="Digite o nome da cidade"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                border: "1px solid #ddd",
-                padding: 10,
-                borderRadius: 8,
-                marginBottom: 10,
+                flex: 1,
+                minWidth: 280,
+                padding: "16px 18px",
+                borderRadius: 16,
+                border: "1px solid #cbd5e1",
+                fontSize: 16,
+                background: "#fff",
+                color: "#0f172a",
+                outline: "none",
+                boxShadow: "inset 0 1px 2px rgba(15,23,42,0.04)",
+              }}
+            />
+
+            <button
+              onClick={criarCidade}
+              disabled={salvando}
+              style={{
+                padding: "16px 22px",
+                borderRadius: 16,
+                border: "none",
+                background: "#2563eb",
+                color: "#fff",
+                fontSize: 16,
+                fontWeight: "bold",
+                cursor: "pointer",
+                minWidth: 130,
+                boxShadow: "0 10px 24px rgba(37,99,235,0.28)",
               }}
             >
-              <span>{c.name}</span>
+              {salvando ? "Criando..." : "Criar cidade"}
+            </button>
+          </div>
 
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              flexWrap: "wrap",
+              marginTop: 18,
+            }}
+          >
+            <a href="/dashboard" style={{ textDecoration: "none" }}>
               <button
-                onClick={() => deletarCidade(c.id)}
                 style={{
-                  padding: "8px 12px",
-                  border: "none",
-                  borderRadius: 6,
+                  padding: "13px 18px",
+                  borderRadius: 14,
+                  border: "1px solid #e2e8f0",
+                  background: "#f8fafc",
+                  color: "#334155",
+                  fontWeight: "bold",
                   cursor: "pointer",
                 }}
               >
-                Excluir
+                Voltar ao Painel
               </button>
-            </div>
-          ))}
+            </a>
+          </div>
         </div>
-      )}
+
+        <div
+          style={{
+            background: "#ffffff",
+            borderRadius: 22,
+            padding: 24,
+            boxShadow: "0 10px 30px rgba(15,23,42,0.08)",
+            border: "1px solid #e2e8f0",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              flexWrap: "wrap",
+              marginBottom: 18,
+            }}
+          >
+            <div>
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: 26,
+                  color: "#0f172a",
+                }}
+              >
+                Cidades cadastradas
+              </h2>
+
+              <p
+                style={{
+                  margin: "8px 0 0",
+                  color: "#64748b",
+                  fontSize: 15,
+                }}
+              >
+                Total de cidades: <strong>{cidades.length}</strong>
+              </p>
+            </div>
+          </div>
+
+          {loading ? (
+            <div
+              style={{
+                background: "#f8fafc",
+                borderRadius: 16,
+                padding: 20,
+                border: "1px solid #e2e8f0",
+                color: "#334155",
+              }}
+            >
+              Carregando cidades...
+            </div>
+          ) : cidades.length === 0 ? (
+            <div
+              style={{
+                background: "#f8fafc",
+                borderRadius: 16,
+                padding: 20,
+                border: "1px solid #e2e8f0",
+                color: "#334155",
+              }}
+            >
+              Nenhuma cidade cadastrada.
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "grid",
+                gap: 14,
+              }}
+            >
+              {cidades.map((c, index) => (
+                <div
+                  key={c.id}
+                  style={{
+                    background: "#ffffff",
+                    borderRadius: 18,
+                    padding: 18,
+                    border: "1px solid #e2e8f0",
+                    boxShadow: "0 6px 18px rgba(15,23,42,0.05)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 14,
+                    flexWrap: "wrap",
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: 6,
+                      height: "100%",
+                      background: "#16a34a",
+                    }}
+                  />
+
+                  <div style={{ paddingLeft: 10 }}>
+                    <div
+                      style={{
+                        fontSize: 13,
+                        color: "#64748b",
+                        fontWeight: "bold",
+                        textTransform: "uppercase",
+                        letterSpacing: 0.5,
+                        marginBottom: 6,
+                      }}
+                    >
+                      Cidade #{index + 1}
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 22,
+                        fontWeight: "bold",
+                        color: "#0f172a",
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {c.name}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => deletarCidade(c.id)}
+                    style={{
+                      padding: "12px 16px",
+                      borderRadius: 12,
+                      border: "none",
+                      background: "#dc2626",
+                      color: "#fff",
+                      fontWeight: "bold",
+                      cursor: "pointer",
+                      boxShadow: "0 8px 18px rgba(220,38,38,0.18)",
+                    }}
+                  >
+                    Excluir
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
