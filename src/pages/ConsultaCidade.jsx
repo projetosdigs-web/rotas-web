@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "../services/api";
 import MapaRotas from "../components/MapaRotas";
 
@@ -34,6 +34,17 @@ export default function ConsultaCidade() {
   const [loading, setLoading] = useState(false);
   const [buscou, setBuscou] = useState(false);
   const [infoBusca, setInfoBusca] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    function handleResize() {
+      setIsMobile(window.innerWidth <= 768);
+    }
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   async function buscar() {
     if (!busca.trim()) {
@@ -93,7 +104,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
         minHeight: "100vh",
         background:
           "linear-gradient(180deg, #eff6ff 0%, #f8fafc 45%, #ffffff 100%)",
-        padding: "28px 18px 48px",
+        padding: isMobile ? "18px 12px 36px" : "28px 18px 48px",
         fontFamily: "Arial, sans-serif",
       }}
     >
@@ -101,8 +112,8 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1.3fr 0.9fr",
-            gap: 24,
+            gridTemplateColumns: isMobile ? "1fr" : "1.3fr 0.9fr",
+            gap: isMobile ? 16 : 24,
             alignItems: "stretch",
             marginBottom: 24,
           }}
@@ -111,8 +122,8 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
             style={{
               background: "rgba(255,255,255,0.9)",
               backdropFilter: "blur(8px)",
-              borderRadius: 28,
-              padding: 32,
+              borderRadius: isMobile ? 20 : 28,
+              padding: isMobile ? 20 : 32,
               boxShadow: "0 18px 45px rgba(15,23,42,0.08)",
               border: "1px solid #e2e8f0",
             }}
@@ -137,7 +148,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
             <h1
               style={{
                 margin: 0,
-                fontSize: 46,
+                fontSize: isMobile ? 30 : 46,
                 lineHeight: 1.05,
                 color: "#0f172a",
                 maxWidth: 700,
@@ -151,7 +162,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                 marginTop: 16,
                 marginBottom: 0,
                 color: "#475569",
-                fontSize: 18,
+                fontSize: isMobile ? 15 : 18,
                 lineHeight: 1.6,
                 maxWidth: 760,
               }}
@@ -164,6 +175,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
               style={{
                 marginTop: 28,
                 display: "flex",
+                flexDirection: isMobile ? "column" : "row",
                 gap: 12,
                 flexWrap: "wrap",
               }}
@@ -178,7 +190,8 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                 }}
                 style={{
                   flex: 1,
-                  minWidth: 280,
+                  minWidth: isMobile ? "100%" : 280,
+                  width: isMobile ? "100%" : "auto",
                   padding: "18px 18px",
                   borderRadius: 16,
                   border: "1px solid #cbd5e1",
@@ -187,6 +200,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                   background: "#fff",
                   color: "#0f172a",
                   boxShadow: "inset 0 1px 2px rgba(15,23,42,0.04)",
+                  boxSizing: "border-box",
                 }}
               />
 
@@ -202,7 +216,8 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                   fontSize: 16,
                   fontWeight: "bold",
                   cursor: "pointer",
-                  minWidth: 130,
+                  minWidth: isMobile ? "100%" : 130,
+                  width: isMobile ? "100%" : "auto",
                   boxShadow: "0 10px 24px rgba(37,99,235,0.28)",
                 }}
               >
@@ -220,7 +235,8 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                   fontSize: 16,
                   fontWeight: "bold",
                   cursor: "pointer",
-                  minWidth: 120,
+                  minWidth: isMobile ? "100%" : 120,
+                  width: isMobile ? "100%" : "auto",
                 }}
               >
                 Limpar
@@ -230,14 +246,16 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
             <div
               style={{
                 display: "flex",
+                flexDirection: isMobile ? "column" : "row",
                 gap: 12,
                 flexWrap: "wrap",
                 marginTop: 18,
               }}
             >
-              <a href="/rotas-dia" style={{ textDecoration: "none" }}>
+              <a href="/rotas-dia" style={{ textDecoration: "none", width: isMobile ? "100%" : "auto" }}>
                 <button
                   style={{
+                    width: isMobile ? "100%" : "auto",
                     padding: "13px 18px",
                     borderRadius: 14,
                     border: "1px solid #dbeafe",
@@ -251,9 +269,10 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                 </button>
               </a>
 
-              <a href="/login" style={{ textDecoration: "none" }}>
+              <a href="/login" style={{ textDecoration: "none", width: isMobile ? "100%" : "auto" }}>
                 <button
                   style={{
+                    width: isMobile ? "100%" : "auto",
                     padding: "13px 18px",
                     borderRadius: 14,
                     border: "1px solid #e2e8f0",
@@ -274,13 +293,13 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
               background:
                 "linear-gradient(135deg, #2563eb 0%, #1d4ed8 45%, #0f172a 100%)",
               color: "#fff",
-              borderRadius: 28,
-              padding: 28,
+              borderRadius: isMobile ? 20 : 28,
+              padding: isMobile ? 20 : 28,
               boxShadow: "0 18px 45px rgba(37,99,235,0.18)",
               display: "flex",
               flexDirection: "column",
               justifyContent: "space-between",
-              minHeight: 320,
+              minHeight: isMobile ? "auto" : 320,
             }}
           >
             <div>
@@ -299,7 +318,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
 
               <div
                 style={{
-                  fontSize: 30,
+                  fontSize: isMobile ? 24 : 30,
                   fontWeight: "bold",
                   lineHeight: 1.15,
                   marginBottom: 14,
@@ -313,7 +332,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                   margin: 0,
                   opacity: 0.9,
                   lineHeight: 1.7,
-                  fontSize: 16,
+                  fontSize: isMobile ? 15 : 16,
                 }}
               >
                 Visualize rapidamente cobertura regional, dia de atendimento e
@@ -341,13 +360,13 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                     background: "rgba(255,255,255,0.12)",
                     border: "1px solid rgba(255,255,255,0.18)",
                     borderRadius: 18,
-                    padding: 16,
+                    padding: isMobile ? 12 : 16,
                   }}
                 >
                   <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 6 }}>
                     {item.label}
                   </div>
-                  <div style={{ fontSize: 20, fontWeight: "bold" }}>
+                  <div style={{ fontSize: isMobile ? 17 : 20, fontWeight: "bold" }}>
                     {item.value}
                   </div>
                 </div>
@@ -359,7 +378,9 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gridTemplateColumns: isMobile
+              ? "1fr"
+              : "repeat(auto-fit, minmax(220px, 1fr))",
             gap: 16,
             marginBottom: 26,
           }}
@@ -387,7 +408,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
               style={{
                 background: "#ffffff",
                 borderRadius: 22,
-                padding: 22,
+                padding: isMobile ? 18 : 22,
                 border: "1px solid #e2e8f0",
                 boxShadow: "0 10px 30px rgba(15,23,42,0.05)",
               }}
@@ -395,7 +416,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
               <div
                 style={{
                   fontWeight: "bold",
-                  fontSize: 20,
+                  fontSize: isMobile ? 18 : 20,
                   color: "#0f172a",
                   marginBottom: 10,
                 }}
@@ -474,7 +495,9 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+              gridTemplateColumns: isMobile
+                ? "1fr"
+                : "repeat(auto-fit, minmax(300px, 1fr))",
               gap: 18,
             }}
           >
@@ -484,7 +507,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                 style={{
                   background: "#ffffff",
                   borderRadius: 22,
-                  padding: 22,
+                  padding: isMobile ? 18 : 22,
                   boxShadow: "0 10px 30px rgba(15,23,42,0.08)",
                   border: "1px solid #e2e8f0",
                   position: "relative",
@@ -505,7 +528,8 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                 <div
                   style={{
                     display: "flex",
-                    alignItems: "start",
+                    flexDirection: isMobile ? "column" : "row",
+                    alignItems: isMobile ? "flex-start" : "start",
                     justifyContent: "space-between",
                     gap: 12,
                     marginTop: 8,
@@ -528,7 +552,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
 
                     <div
                       style={{
-                        fontSize: 28,
+                        fontSize: isMobile ? 24 : 28,
                         fontWeight: "bold",
                         color: "#0f172a",
                         lineHeight: 1,
@@ -573,7 +597,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
+                      gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
                       gap: 12,
                     }}
                   >
