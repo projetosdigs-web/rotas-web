@@ -6,6 +6,19 @@ export default function CadastroRotas() {
   const [rotas, setRotas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    function resize() {
+      setIsMobile(window.innerWidth <= 768);
+    }
+
+    resize();
+    window.addEventListener("resize", resize);
+    carregarRotas();
+
+    return () => window.removeEventListener("resize", resize);
+  }, []);
 
   async function carregarRotas() {
     try {
@@ -13,7 +26,6 @@ export default function CadastroRotas() {
       const res = await api.get("/routes/");
       setRotas(res.data || []);
     } catch (err) {
-      console.error("Erro ao carregar rotas:", err);
       alert("Erro ao carregar rotas");
     } finally {
       setLoading(false);
@@ -34,50 +46,44 @@ export default function CadastroRotas() {
       });
 
       setNome("");
-      await carregarRotas();
+      carregarRotas();
     } catch (err) {
-      console.error("Erro ao criar rota:", err);
       alert("Erro ao criar rota");
     } finally {
       setSalvando(false);
     }
   }
 
-  async function deletarRota(id) {
-    const confirmar = window.confirm("Deseja excluir essa rota?");
-    if (!confirmar) return;
+  async function excluir(id) {
+    const ok = window.confirm("Deseja excluir essa rota?");
+    if (!ok) return;
 
     try {
       await api.delete(`/routes/${id}`);
-      await carregarRotas();
-    } catch (err) {
-      console.error("Erro ao excluir rota:", err);
-      alert("Erro ao excluir rota");
+      carregarRotas();
+    } catch {
+      alert("Erro ao excluir");
     }
   }
-
-  useEffect(() => {
-    carregarRotas();
-  }, []);
 
   return (
     <div
       style={{
         minHeight: "100vh",
         background:
-          "linear-gradient(180deg, #eff6ff 0%, #f8fafc 45%, #ffffff 100%)",
-        padding: "28px 18px 48px",
+          "linear-gradient(180deg, #f8f7fc 0%, #fff8f2 45%, #ffffff 100%)",
+        padding: isMobile ? "18px 12px 36px" : "28px 18px 48px",
         fontFamily: "Arial, sans-serif",
       }}
     >
-      <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
         <div
           style={{
-            background: "#ffffff",
+            background: "#fff",
             borderRadius: 28,
-            padding: 30,
+            padding: isMobile ? 20 : 30,
             boxShadow: "0 18px 45px rgba(15,23,42,0.08)",
-            border: "1px solid #e2e8f0",
+            border: "1px solid #ece8f7",
             marginBottom: 24,
           }}
         >
@@ -86,21 +92,20 @@ export default function CadastroRotas() {
               display: "inline-flex",
               padding: "8px 14px",
               borderRadius: 999,
-              background: "#dbeafe",
-              color: "#1d4ed8",
+              background: "#efeafd",
+              color: "#403d7c",
               fontSize: 13,
               fontWeight: "bold",
               marginBottom: 18,
             }}
           >
-            Cadastro administrativo
+            Ferperez • Cadastro
           </div>
 
           <h1
             style={{
               margin: 0,
-              fontSize: 40,
-              lineHeight: 1.1,
+              fontSize: isMobile ? 28 : 38,
               color: "#0f172a",
             }}
           >
@@ -109,41 +114,35 @@ export default function CadastroRotas() {
 
           <p
             style={{
-              marginTop: 12,
-              color: "#475569",
-              fontSize: 17,
+              marginTop: 10,
+              color: "#64748b",
+              fontSize: 15,
               lineHeight: 1.6,
-              maxWidth: 760,
             }}
           >
-            Cadastre e gerencie as rotas que serão usadas no atendimento comercial
-            e operacional do sistema.
+            Cadastre e organize as rotas utilizadas pela operação comercial.
           </p>
 
           <div
             style={{
               display: "flex",
+              flexDirection: isMobile ? "column" : "row",
               gap: 12,
-              flexWrap: "wrap",
-              marginTop: 24,
+              marginTop: 22,
             }}
           >
             <input
-              type="text"
-              placeholder="Digite o nome da rota"
+              placeholder="Nome da rota"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && criarRota()}
               style={{
                 flex: 1,
-                minWidth: 280,
                 padding: "16px 18px",
                 borderRadius: 16,
-                border: "1px solid #cbd5e1",
+                border: "1px solid #ddd6f5",
                 fontSize: 16,
-                background: "#fff",
-                color: "#0f172a",
                 outline: "none",
-                boxShadow: "inset 0 1px 2px rgba(15,23,42,0.04)",
               }}
             />
 
@@ -154,159 +153,68 @@ export default function CadastroRotas() {
                 padding: "16px 22px",
                 borderRadius: 16,
                 border: "none",
-                background: "#2563eb",
+                background: "#403d7c",
                 color: "#fff",
-                fontSize: 16,
                 fontWeight: "bold",
                 cursor: "pointer",
-                minWidth: 130,
-                boxShadow: "0 10px 24px rgba(37,99,235,0.28)",
+                minWidth: isMobile ? "100%" : 150,
               }}
             >
-              {salvando ? "Criando..." : "Criar rota"}
+              {salvando ? "Salvando..." : "Cadastrar"}
             </button>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              gap: 12,
-              flexWrap: "wrap",
-              marginTop: 18,
-            }}
-          >
-            <a href="/dashboard" style={{ textDecoration: "none" }}>
-              <button
-                style={{
-                  padding: "13px 18px",
-                  borderRadius: 14,
-                  border: "1px solid #e2e8f0",
-                  background: "#f8fafc",
-                  color: "#334155",
-                  fontWeight: "bold",
-                  cursor: "pointer",
-                }}
-              >
-                Voltar ao Painel
-              </button>
-            </a>
           </div>
         </div>
 
         <div
           style={{
-            background: "#ffffff",
-            borderRadius: 22,
-            padding: 24,
-            boxShadow: "0 10px 30px rgba(15,23,42,0.08)",
-            border: "1px solid #e2e8f0",
+            background: "#fff",
+            borderRadius: 24,
+            padding: isMobile ? 18 : 24,
+            border: "1px solid #ece8f7",
+            boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
           }}
         >
-          <div
+          <h2
             style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
-              flexWrap: "wrap",
-              marginBottom: 18,
+              marginTop: 0,
+              color: "#0f172a",
+              fontSize: 24,
             }}
           >
-            <div>
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: 26,
-                  color: "#0f172a",
-                }}
-              >
-                Rotas cadastradas
-              </h2>
-
-              <p
-                style={{
-                  margin: "8px 0 0",
-                  color: "#64748b",
-                  fontSize: 15,
-                }}
-              >
-                Total de rotas: <strong>{rotas.length}</strong>
-              </p>
-            </div>
-          </div>
+            Rotas cadastradas
+          </h2>
 
           {loading ? (
-            <div
-              style={{
-                background: "#f8fafc",
-                borderRadius: 16,
-                padding: 20,
-                border: "1px solid #e2e8f0",
-                color: "#334155",
-              }}
-            >
-              Carregando rotas...
-            </div>
+            <p style={{ color: "#64748b" }}>Carregando...</p>
           ) : rotas.length === 0 ? (
-            <div
-              style={{
-                background: "#f8fafc",
-                borderRadius: 16,
-                padding: 20,
-                border: "1px solid #e2e8f0",
-                color: "#334155",
-              }}
-            >
-              Nenhuma rota cadastrada.
-            </div>
+            <p style={{ color: "#64748b" }}>Nenhuma rota cadastrada.</p>
           ) : (
-            <div
-              style={{
-                display: "grid",
-                gap: 14,
-              }}
-            >
-              {rotas.map((r, index) => (
+            <div style={{ display: "grid", gap: 12 }}>
+              {rotas.map((item, i) => (
                 <div
-                  key={r.id}
+                  key={item.id}
                   style={{
-                    background: "#ffffff",
+                    background: "#faf9fd",
+                    border: "1px solid #ece8f7",
                     borderRadius: 18,
                     padding: 18,
-                    border: "1px solid #e2e8f0",
-                    boxShadow: "0 6px 18px rgba(15,23,42,0.05)",
                     display: "flex",
+                    flexDirection: isMobile ? "column" : "row",
                     justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: 14,
-                    flexWrap: "wrap",
-                    position: "relative",
-                    overflow: "hidden",
+                    alignItems: isMobile ? "stretch" : "center",
+                    gap: 12,
                   }}
                 >
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: 6,
-                      height: "100%",
-                      background: "#2563eb",
-                    }}
-                  />
-
-                  <div style={{ paddingLeft: 10 }}>
+                  <div>
                     <div
                       style={{
                         fontSize: 13,
                         color: "#64748b",
                         fontWeight: "bold",
-                        textTransform: "uppercase",
-                        letterSpacing: 0.5,
-                        marginBottom: 6,
+                        marginBottom: 4,
                       }}
                     >
-                      Rota #{index + 1}
+                      Rota #{i + 1}
                     </div>
 
                     <div
@@ -314,24 +222,23 @@ export default function CadastroRotas() {
                         fontSize: 22,
                         fontWeight: "bold",
                         color: "#0f172a",
-                        lineHeight: 1.2,
                       }}
                     >
-                      {r.name}
+                      {item.name}
                     </div>
                   </div>
 
                   <button
-                    onClick={() => deletarRota(r.id)}
+                    onClick={() => excluir(item.id)}
                     style={{
                       padding: "12px 16px",
-                      borderRadius: 12,
+                      borderRadius: 14,
                       border: "none",
-                      background: "#dc2626",
+                      background: "#ed823c",
                       color: "#fff",
                       fontWeight: "bold",
                       cursor: "pointer",
-                      boxShadow: "0 8px 18px rgba(220,38,38,0.18)",
+                      minWidth: isMobile ? "100%" : 120,
                     }}
                   >
                     Excluir
@@ -340,6 +247,24 @@ export default function CadastroRotas() {
               ))}
             </div>
           )}
+
+          <a href="/dashboard" style={{ textDecoration: "none" }}>
+            <button
+              style={{
+                marginTop: 18,
+                width: isMobile ? "100%" : "auto",
+                padding: "14px 18px",
+                borderRadius: 14,
+                border: "1px solid #ece8f7",
+                background: "#fff",
+                color: "#403d7c",
+                fontWeight: "bold",
+                cursor: "pointer",
+              }}
+            >
+              Voltar ao painel
+            </button>
+          </a>
         </div>
       </div>
     </div>
