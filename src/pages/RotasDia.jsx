@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "../services/api";
 
 function traduzirDia(valor) {
@@ -48,6 +48,17 @@ export default function RotasDia() {
   const [rotas, setRotas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [buscou, setBuscou] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    function handleResize() {
+      setIsMobile(window.innerWidth <= 768);
+    }
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   async function buscarRotas() {
     if (weekday === "") {
@@ -82,7 +93,7 @@ export default function RotasDia() {
         minHeight: "100vh",
         background:
           "linear-gradient(180deg, #eff6ff 0%, #f8fafc 45%, #ffffff 100%)",
-        padding: "28px 18px 48px",
+        padding: isMobile ? "18px 12px 36px" : "28px 18px 48px",
         fontFamily: "Arial, sans-serif",
       }}
     >
@@ -90,8 +101,8 @@ export default function RotasDia() {
         <div
           style={{
             background: "#ffffff",
-            borderRadius: 28,
-            padding: 30,
+            borderRadius: isMobile ? 20 : 28,
+            padding: isMobile ? 20 : 30,
             boxShadow: "0 18px 45px rgba(15,23,42,0.08)",
             border: "1px solid #e2e8f0",
             marginBottom: 24,
@@ -115,7 +126,7 @@ export default function RotasDia() {
           <h1
             style={{
               margin: 0,
-              fontSize: 38,
+              fontSize: isMobile ? 30 : 38,
               lineHeight: 1.1,
               color: "#0f172a",
             }}
@@ -127,7 +138,7 @@ export default function RotasDia() {
             style={{
               marginTop: 12,
               color: "#475569",
-              fontSize: 17,
+              fontSize: isMobile ? 15 : 17,
               lineHeight: 1.6,
               maxWidth: 760,
             }}
@@ -139,6 +150,7 @@ export default function RotasDia() {
           <div
             style={{
               display: "flex",
+              flexDirection: isMobile ? "column" : "row",
               gap: 12,
               flexWrap: "wrap",
               marginTop: 24,
@@ -149,13 +161,15 @@ export default function RotasDia() {
               onChange={(e) => setWeekday(e.target.value)}
               style={{
                 flex: 1,
-                minWidth: 260,
+                minWidth: isMobile ? "100%" : 260,
+                width: isMobile ? "100%" : "auto",
                 padding: "16px 18px",
                 borderRadius: 16,
                 border: "1px solid #cbd5e1",
                 fontSize: 16,
                 background: "#fff",
                 color: "#0f172a",
+                boxSizing: "border-box",
               }}
             >
               <option value="">Selecione o dia</option>
@@ -179,7 +193,8 @@ export default function RotasDia() {
                 fontSize: 16,
                 fontWeight: "bold",
                 cursor: "pointer",
-                minWidth: 130,
+                minWidth: isMobile ? "100%" : 130,
+                width: isMobile ? "100%" : "auto",
                 boxShadow: "0 10px 24px rgba(37,99,235,0.28)",
               }}
             >
@@ -197,7 +212,8 @@ export default function RotasDia() {
                 fontSize: 16,
                 fontWeight: "bold",
                 cursor: "pointer",
-                minWidth: 120,
+                minWidth: isMobile ? "100%" : 120,
+                width: isMobile ? "100%" : "auto",
               }}
             >
               Limpar
@@ -207,14 +223,16 @@ export default function RotasDia() {
           <div
             style={{
               display: "flex",
+              flexDirection: isMobile ? "column" : "row",
               gap: 12,
               flexWrap: "wrap",
               marginTop: 18,
             }}
           >
-            <a href="/consulta" style={{ textDecoration: "none" }}>
+            <a href="/consulta" style={{ textDecoration: "none", width: isMobile ? "100%" : "auto" }}>
               <button
                 style={{
+                  width: isMobile ? "100%" : "auto",
                   padding: "13px 18px",
                   borderRadius: 14,
                   border: "1px solid #dbeafe",
@@ -228,9 +246,10 @@ export default function RotasDia() {
               </button>
             </a>
 
-            <a href="/dashboard" style={{ textDecoration: "none" }}>
+            <a href="/dashboard" style={{ textDecoration: "none", width: isMobile ? "100%" : "auto" }}>
               <button
                 style={{
+                  width: isMobile ? "100%" : "auto",
                   padding: "13px 18px",
                   borderRadius: 14,
                   border: "1px solid #e2e8f0",
@@ -282,7 +301,9 @@ export default function RotasDia() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+              gridTemplateColumns: isMobile
+                ? "1fr"
+                : "repeat(auto-fit, minmax(300px, 1fr))",
               gap: 18,
             }}
           >
@@ -292,7 +313,7 @@ export default function RotasDia() {
                 style={{
                   background: "#ffffff",
                   borderRadius: 22,
-                  padding: 22,
+                  padding: isMobile ? 18 : 22,
                   boxShadow: "0 10px 30px rgba(15,23,42,0.08)",
                   border: "1px solid #e2e8f0",
                   position: "relative",
@@ -313,7 +334,8 @@ export default function RotasDia() {
                 <div
                   style={{
                     display: "flex",
-                    alignItems: "start",
+                    flexDirection: isMobile ? "column" : "row",
+                    alignItems: isMobile ? "flex-start" : "start",
                     justifyContent: "space-between",
                     gap: 12,
                     marginTop: 8,
@@ -336,7 +358,7 @@ export default function RotasDia() {
 
                     <div
                       style={{
-                        fontSize: 28,
+                        fontSize: isMobile ? 24 : 28,
                         fontWeight: "bold",
                         color: "#0f172a",
                         lineHeight: 1,
@@ -397,7 +419,7 @@ export default function RotasDia() {
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
+                      gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
                       gap: 12,
                     }}
                   >
