@@ -30,49 +30,49 @@ export default function Dashboard() {
       subtitle: "Acesso rápido",
       description: "Tela principal usada pelos vendedores para localizar atendimento.",
       path: "/consulta",
-      color: "#2563eb",
+      color: "#403d7c",
     },
     {
       title: "Rotas do Dia",
       subtitle: "Operacional",
       description: "Visualize todas as rotas programadas para um dia específico.",
       path: "/rotas-dia",
-      color: "#16a34a",
+      color: "#ed823c",
     },
     {
       title: "Rotas",
       subtitle: "Cadastro",
       description: "Gerencie as rotas cadastradas no sistema.",
       path: "/admin/rotas",
-      color: "#7c3aed",
+      color: "#e0a839",
     },
     {
       title: "Cidades",
       subtitle: "Cadastro",
       description: "Mantenha a base de cidades organizada e atualizada.",
       path: "/admin/cidades",
-      color: "#ea580c",
+      color: "#403d7c",
     },
     {
       title: "Bairros",
       subtitle: "Cadastro",
       description: "Cadastre e mantenha os bairros vinculados às cidades.",
       path: "/admin/bairros",
-      color: "#dc2626",
+      color: "#ed823c",
     },
     {
       title: "Veículos",
       subtitle: "Cadastro",
       description: "Gerencie os veículos usados nas rotas de atendimento.",
       path: "/admin/veiculos",
-      color: "#0f766e",
+      color: "#e0a839",
     },
     {
       title: "Vínculo de Rotas",
       subtitle: "Configuração",
       description: "Relacione rota, cidade, bairro, dia e veículo.",
       path: "/admin/vinculos",
-      color: "#0f172a",
+      color: "#403d7c",
     },
   ];
 
@@ -81,7 +81,7 @@ export default function Dashboard() {
       style={{
         minHeight: "100vh",
         background:
-          "linear-gradient(180deg, #eff6ff 0%, #f8fafc 45%, #ffffff 100%)",
+          "linear-gradient(180deg, #f8f7fc 0%, #fff8f2 45%, #ffffff 100%)",
         padding: isMobile ? "18px 12px 36px" : "28px 18px 48px",
         fontFamily: "Arial, sans-serif",
       }}
@@ -93,7 +93,7 @@ export default function Dashboard() {
             borderRadius: isMobile ? 20 : 28,
             padding: isMobile ? 20 : 30,
             boxShadow: "0 18px 45px rgba(15,23,42,0.08)",
-            border: "1px solid #e2e8f0",
+            border: "1px solid #ece8f7",
             marginBottom: 24,
           }}
         >
@@ -102,14 +102,14 @@ export default function Dashboard() {
               display: "inline-flex",
               padding: "8px 14px",
               borderRadius: 999,
-              background: "#dbeafe",
-              color: "#1d4ed8",
+              background: "#efeafd",
+              color: "#403d7c",
               fontSize: 13,
               fontWeight: "bold",
               marginBottom: 18,
             }}
           >
-            Área administrativa
+            Ferperez • Área administrativa
           </div>
 
           <h1
@@ -132,8 +132,8 @@ export default function Dashboard() {
               maxWidth: 800,
             }}
           >
-            Gerencie cadastros, vínculos operacionais e acessos rápidos do sistema
-            de rotas em um único painel.
+            Gerencie cadastros, vínculos operacionais e acessos rápidos do
+            sistema Ferperez RotaCerta em um único painel.
           </p>
 
           <div
@@ -151,9 +151,9 @@ export default function Dashboard() {
                 width: isMobile ? "100%" : "auto",
                 padding: "13px 18px",
                 borderRadius: 14,
-                border: "1px solid #dbeafe",
-                background: "#eff6ff",
-                color: "#1d4ed8",
+                border: "1px solid #efeafd",
+                background: "#f8f7fc",
+                color: "#403d7c",
                 fontWeight: "bold",
                 cursor: "pointer",
               }}
@@ -167,9 +167,9 @@ export default function Dashboard() {
                 width: isMobile ? "100%" : "auto",
                 padding: "13px 18px",
                 borderRadius: 14,
-                border: "1px solid #e2e8f0",
-                background: "#f8fafc",
-                color: "#334155",
+                border: "1px solid #f6dcc9",
+                background: "#fff4eb",
+                color: "#ed823c",
                 fontWeight: "bold",
                 cursor: "pointer",
               }}
@@ -197,7 +197,7 @@ export default function Dashboard() {
                 borderRadius: 22,
                 padding: isMobile ? 18 : 22,
                 boxShadow: "0 10px 30px rgba(15,23,42,0.08)",
-                border: "1px solid #e2e8f0",
+                border: "1px solid #ece8f7",
                 cursor: "pointer",
                 position: "relative",
                 overflow: "hidden",
@@ -277,12 +277,12 @@ export default function Dashboard() {
               padding: "15px 24px",
               borderRadius: 16,
               border: "none",
-              background: "#dc2626",
+              background: "#403d7c",
               color: "#fff",
               fontWeight: "bold",
               fontSize: 15,
               cursor: "pointer",
-              boxShadow: "0 10px 22px rgba(220,38,38,0.22)",
+              boxShadow: "0 10px 22px rgba(64,61,124,0.22)",
             }}
           >
             Sair do sistema

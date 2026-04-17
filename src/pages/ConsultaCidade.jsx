@@ -17,15 +17,15 @@ function traduzirDia(weekday) {
 
 function corDia(weekday) {
   const cores = {
-    0: "#2563eb",
-    1: "#16a34a",
-    2: "#7c3aed",
-    3: "#ea580c",
-    4: "#dc2626",
-    5: "#0f766e",
+    0: "#403d7c",
+    1: "#ed823c",
+    2: "#e0a839",
+    3: "#6b5fb3",
+    4: "#c96f2f",
+    5: "#8f7c28",
   };
 
-  return cores[weekday] || "#334155";
+  return cores[weekday] || "#403d7c";
 }
 
 export default function ConsultaCidade() {
@@ -103,7 +103,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
       style={{
         minHeight: "100vh",
         background:
-          "linear-gradient(180deg, #eff6ff 0%, #f8fafc 45%, #ffffff 100%)",
+          "linear-gradient(180deg, #f8f7fc 0%, #fff8f2 45%, #ffffff 100%)",
         padding: isMobile ? "18px 12px 36px" : "28px 18px 48px",
         fontFamily: "Arial, sans-serif",
       }}
@@ -120,12 +120,12 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
         >
           <div
             style={{
-              background: "rgba(255,255,255,0.9)",
+              background: "rgba(255,255,255,0.95)",
               backdropFilter: "blur(8px)",
               borderRadius: isMobile ? 20 : 28,
               padding: isMobile ? 20 : 32,
               boxShadow: "0 18px 45px rgba(15,23,42,0.08)",
-              border: "1px solid #e2e8f0",
+              border: "1px solid #ece8f7",
             }}
           >
             <div
@@ -135,14 +135,14 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                 gap: 8,
                 padding: "8px 14px",
                 borderRadius: 999,
-                background: "#dbeafe",
-                color: "#1d4ed8",
+                background: "#efeafd",
+                color: "#403d7c",
                 fontSize: 13,
                 fontWeight: "bold",
                 marginBottom: 18,
               }}
             >
-              Consulta premium para vendedores
+              Ferperez • Consulta comercial
             </div>
 
             <h1
@@ -154,7 +154,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                 maxWidth: 700,
               }}
             >
-              Descubra sua rota de atendimento em segundos
+              Ferperez <span style={{ color: "#403d7c" }}>RotaCerta</span>
             </h1>
 
             <p
@@ -194,7 +194,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                   width: isMobile ? "100%" : "auto",
                   padding: "18px 18px",
                   borderRadius: 16,
-                  border: "1px solid #cbd5e1",
+                  border: "1px solid #ddd6f5",
                   fontSize: 16,
                   outline: "none",
                   background: "#fff",
@@ -211,14 +211,14 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                   padding: "18px 22px",
                   borderRadius: 16,
                   border: "none",
-                  background: "#2563eb",
+                  background: "#403d7c",
                   color: "#fff",
                   fontSize: 16,
                   fontWeight: "bold",
                   cursor: "pointer",
                   minWidth: isMobile ? "100%" : 130,
                   width: isMobile ? "100%" : "auto",
-                  boxShadow: "0 10px 24px rgba(37,99,235,0.28)",
+                  boxShadow: "0 10px 24px rgba(64,61,124,0.28)",
                 }}
               >
                 {loading ? "Buscando..." : "Buscar"}
@@ -229,7 +229,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                 style={{
                   padding: "18px 22px",
                   borderRadius: 16,
-                  border: "1px solid #cbd5e1",
+                  border: "1px solid #e2e8f0",
                   background: "#fff",
                   color: "#0f172a",
                   fontSize: 16,
@@ -258,9 +258,9 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                     width: isMobile ? "100%" : "auto",
                     padding: "13px 18px",
                     borderRadius: 14,
-                    border: "1px solid #dbeafe",
-                    background: "#eff6ff",
-                    color: "#1d4ed8",
+                    border: "1px solid #f4d8c4",
+                    background: "#fff3ea",
+                    color: "#ed823c",
                     fontWeight: "bold",
                     cursor: "pointer",
                   }}
@@ -275,9 +275,9 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                     width: isMobile ? "100%" : "auto",
                     padding: "13px 18px",
                     borderRadius: 14,
-                    border: "1px solid #e2e8f0",
-                    background: "#f8fafc",
-                    color: "#334155",
+                    border: "1px solid #ece8f7",
+                    background: "#f8f7fc",
+                    color: "#403d7c",
                     fontWeight: "bold",
                     cursor: "pointer",
                   }}
@@ -291,11 +291,11 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
           <div
             style={{
               background:
-                "linear-gradient(135deg, #2563eb 0%, #1d4ed8 45%, #0f172a 100%)",
+                "linear-gradient(135deg, #403d7c 0%, #5b52a4 45%, #ed823c 100%)",
               color: "#fff",
               borderRadius: isMobile ? 20 : 28,
               padding: isMobile ? 20 : 28,
-              boxShadow: "0 18px 45px rgba(37,99,235,0.18)",
+              boxShadow: "0 18px 45px rgba(64,61,124,0.18)",
               display: "flex",
               flexDirection: "column",
               justifyContent: "space-between",
@@ -309,11 +309,11 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                   fontWeight: "bold",
                   letterSpacing: 0.5,
                   textTransform: "uppercase",
-                  opacity: 0.85,
+                  opacity: 0.9,
                   marginBottom: 12,
                 }}
               >
-                Rotas Mobile
+                Ferperez RotaCerta
               </div>
 
               <div
@@ -330,7 +330,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
               <p
                 style={{
                   margin: 0,
-                  opacity: 0.9,
+                  opacity: 0.95,
                   lineHeight: 1.7,
                   fontSize: isMobile ? 15 : 16,
                 }}
@@ -375,68 +375,6 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
           </div>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile
-              ? "1fr"
-              : "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: 16,
-            marginBottom: 26,
-          }}
-        >
-          {[
-            {
-              title: "Consulta rápida",
-              text: "Encontre a rota e o dia de atendimento com poucos cliques.",
-            },
-            {
-              title: "Cobertura regional",
-              text: "Veja bairros, cidades e pontos atendidos por cada rota.",
-            },
-            {
-              title: "Uso comercial",
-              text: "Ideal para vendedores e equipes externas em campo.",
-            },
-            {
-              title: "Mapa integrado",
-              text: "Visualize no mapa os locais encontrados na busca.",
-            },
-          ].map((item, index) => (
-            <div
-              key={index}
-              style={{
-                background: "#ffffff",
-                borderRadius: 22,
-                padding: isMobile ? 18 : 22,
-                border: "1px solid #e2e8f0",
-                boxShadow: "0 10px 30px rgba(15,23,42,0.05)",
-              }}
-            >
-              <div
-                style={{
-                  fontWeight: "bold",
-                  fontSize: isMobile ? 18 : 20,
-                  color: "#0f172a",
-                  marginBottom: 10,
-                }}
-              >
-                {item.title}
-              </div>
-
-              <div
-                style={{
-                  color: "#475569",
-                  lineHeight: 1.65,
-                  fontSize: 15,
-                }}
-              >
-                {item.text}
-              </div>
-            </div>
-          ))}
-        </div>
-
         {!loading && infoBusca && (
           <div
             style={{
@@ -444,7 +382,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
               borderRadius: 18,
               padding: 18,
               boxShadow: "0 10px 25px rgba(15,23,42,0.05)",
-              border: "1px solid #e2e8f0",
+              border: "1px solid #ece8f7",
               marginBottom: 20,
             }}
           >
@@ -466,7 +404,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
               borderRadius: 18,
               padding: 24,
               boxShadow: "0 10px 25px rgba(15,23,42,0.05)",
-              border: "1px solid #e2e8f0",
+              border: "1px solid #ece8f7",
             }}
           >
             <p style={{ margin: 0, color: "#334155", fontSize: 16 }}>
@@ -482,7 +420,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
               borderRadius: 18,
               padding: 24,
               boxShadow: "0 10px 25px rgba(15,23,42,0.05)",
-              border: "1px solid #e2e8f0",
+              border: "1px solid #ece8f7",
             }}
           >
             <p style={{ margin: 0, color: "#334155", fontSize: 16 }}>
@@ -509,7 +447,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                   borderRadius: 22,
                   padding: isMobile ? 18 : 22,
                   boxShadow: "0 10px 30px rgba(15,23,42,0.08)",
-                  border: "1px solid #e2e8f0",
+                  border: "1px solid #ece8f7",
                   position: "relative",
                   overflow: "hidden",
                 }}
@@ -566,7 +504,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                     style={{
                       padding: "8px 12px",
                       borderRadius: 999,
-                      background: "#f1f5f9",
+                      background: "#faf7ef",
                       color: corDia(item.weekday),
                       fontWeight: "bold",
                       fontSize: 13,
@@ -580,10 +518,10 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                 <div style={{ display: "grid", gap: 12 }}>
                   <div
                     style={{
-                      background: "#f8fafc",
+                      background: "#faf9fd",
                       borderRadius: 14,
                       padding: 14,
-                      border: "1px solid #e2e8f0",
+                      border: "1px solid #ece8f7",
                     }}
                   >
                     <div style={{ fontSize: 12, color: "#64748b", marginBottom: 4 }}>
@@ -603,10 +541,10 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                   >
                     <div
                       style={{
-                        background: "#f8fafc",
+                        background: "#faf9fd",
                         borderRadius: 14,
                         padding: 14,
-                        border: "1px solid #e2e8f0",
+                        border: "1px solid #ece8f7",
                       }}
                     >
                       <div style={{ fontSize: 12, color: "#64748b", marginBottom: 4 }}>
@@ -619,10 +557,10 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
 
                     <div
                       style={{
-                        background: "#f8fafc",
+                        background: "#faf9fd",
                         borderRadius: 14,
                         padding: 14,
-                        border: "1px solid #e2e8f0",
+                        border: "1px solid #ece8f7",
                       }}
                     >
                       <div style={{ fontSize: 12, color: "#64748b", marginBottom: 4 }}>
@@ -643,7 +581,7 @@ Veículo: ${item.vehicle_name || "-"} ${item.vehicle_plate || ""}`.trim();
                       padding: "14px 16px",
                       borderRadius: 14,
                       border: "none",
-                      background: "#0f172a",
+                      background: "#403d7c",
                       color: "#fff",
                       fontWeight: "bold",
                       fontSize: 15,

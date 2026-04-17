@@ -46,7 +46,7 @@ export default function Login() {
       style={{
         minHeight: "100vh",
         background:
-          "linear-gradient(135deg, #1e3a8a 0%, #2563eb 35%, #0f172a 100%)",
+          "linear-gradient(135deg, #403d7c 0%, #2f2d5d 45%, #ed823c 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -64,7 +64,6 @@ export default function Login() {
           alignItems: "stretch",
         }}
       >
-        {/* LADO ESQUERDO */}
         <div
           style={{
             background: "rgba(255,255,255,0.10)",
@@ -84,13 +83,13 @@ export default function Login() {
                 display: "inline-flex",
                 padding: "8px 14px",
                 borderRadius: 999,
-                background: "rgba(255,255,255,0.12)",
+                background: "rgba(255,255,255,0.14)",
                 fontSize: 13,
                 fontWeight: "bold",
                 marginBottom: 18,
               }}
             >
-              Sistema Premium
+              Ferperez • Área Administrativa
             </div>
 
             <h1
@@ -100,7 +99,9 @@ export default function Login() {
                 lineHeight: 1.05,
               }}
             >
-              Rota Certa
+              Ferperez
+              <br />
+              <span style={{ color: "#e0a839" }}>RotaCerta</span>
             </h1>
 
             <p
@@ -112,8 +113,8 @@ export default function Login() {
                 maxWidth: 520,
               }}
             >
-              Plataforma inteligente para vendedores, roteirização comercial e
-              gestão operacional.
+              Sistema inteligente de rotas comerciais para consulta, operação e
+              gestão interna da equipe.
             </p>
           </div>
 
@@ -162,7 +163,6 @@ export default function Login() {
           </div>
         </div>
 
-        {/* LADO DIREITO LOGIN */}
         <div
           style={{
             background: "#ffffff",
@@ -174,14 +174,14 @@ export default function Login() {
           <div
             style={{
               fontSize: 13,
-              color: "#2563eb",
+              color: "#403d7c",
               fontWeight: "bold",
               marginBottom: 10,
               textTransform: "uppercase",
               letterSpacing: 0.5,
             }}
           >
-            Área Restrita
+            Acesso Restrito
           </div>
 
           <h2
@@ -202,7 +202,8 @@ export default function Login() {
               fontSize: 15,
             }}
           >
-            Informe suas credenciais para acessar o painel administrativo.
+            Informe suas credenciais para acessar o painel administrativo da
+            Ferperez RotaCerta.
           </p>
 
           <div style={{ marginTop: 26 }}>
@@ -270,12 +271,12 @@ export default function Login() {
                 padding: "16px 18px",
                 borderRadius: 16,
                 border: "none",
-                background: "#2563eb",
+                background: "#403d7c",
                 color: "#fff",
                 fontSize: 16,
                 fontWeight: "bold",
                 cursor: "pointer",
-                boxShadow: "0 14px 28px rgba(37,99,235,0.28)",
+                boxShadow: "0 14px 28px rgba(64,61,124,0.28)",
               }}
             >
               {loading ? "Entrando..." : "Entrar"}
@@ -309,7 +310,7 @@ export default function Login() {
               fontSize: 13,
             }}
           >
-            © 2026 Rotas Mobile
+            © 2026 Ferperez RotaCerta
           </div>
         </div>
       </div>
