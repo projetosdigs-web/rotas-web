@@ -8,11 +8,11 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       manifest: {
-        name: "Rotas Mobile",
-        short_name: "Rotas",
-        description: "Sistema de rotas para vendedores",
-        theme_color: "#2563eb",
-        background_color: "#f8fafc",
+        name: "Ferperez RotaCerta",
+        short_name: "RotaCerta",
+        description: "Sistema inteligente de rotas comerciais da Ferperez",
+        theme_color: "#403d7c",
+        background_color: "#ffffff",
         display: "standalone",
         start_url: "/",
         icons: [
