@@ -29,11 +29,15 @@ export default function VinculoRotas() {
   const [vehicles, setVehicles] = useState([]);
   const [vinculos, setVinculos] = useState([]);
 
+  // Estados do formulário
   const [routeId, setRouteId] = useState("");
   const [cityId, setCityId] = useState("");
   const [neighborhoodId, setNeighborhoodId] = useState("");
   const [vehicleId, setVehicleId] = useState("");
   const [weekday, setWeekday] = useState("");
+  
+  // Estado para controle de edição
+  const [editandoId, setEditandoId] = useState(null);
 
   const [loading, setLoading] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -75,35 +79,57 @@ export default function VinculoRotas() {
     }
   }
 
-  async function criarVinculo() {
+  async function salvarVinculo() {
     if (!routeId || !cityId || !neighborhoodId || !vehicleId || weekday === "") {
       alert("Preencha todos os campos");
       return;
     }
 
+    const payload = {
+      route_id: Number(routeId),
+      city_id: Number(cityId),
+      neighborhood_id: Number(neighborhoodId),
+      vehicle_id: Number(vehicleId),
+      weekday: Number(weekday),
+    };
+
     try {
       setSalvando(true);
 
-      await api.post("/route-city-day/", {
-        route_id: Number(routeId),
-        city_id: Number(cityId),
-        neighborhood_id: Number(neighborhoodId),
-        vehicle_id: Number(vehicleId),
-        weekday,
-      });
+      if (editandoId) {
+        // Lógica de Edição (PUT)
+        await api.put(`/route-city-day/${editandoId}/`, payload);
+      } else {
+        // Lógica de Criação (POST)
+        await api.post("/route-city-day/", payload);
+      }
 
-      setRouteId("");
-      setCityId("");
-      setNeighborhoodId("");
-      setVehicleId("");
-      setWeekday("");
-
+      limparFormulario();
       carregarTudo();
     } catch (err) {
-      alert("Erro ao criar vínculo");
+      alert(editandoId ? "Erro ao atualizar vínculo" : "Erro ao criar vínculo");
     } finally {
       setSalvando(false);
     }
+  }
+
+  function prepararEdicao(item) {
+    setEditandoId(item.id);
+    setRouteId(item.route_id || "");
+    setCityId(item.city_id || "");
+    setNeighborhoodId(item.neighborhood_id || "");
+    setVehicleId(item.vehicle_id || "");
+    setWeekday(item.weekday.toString());
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function limparFormulario() {
+    setEditandoId(null);
+    setRouteId("");
+    setCityId("");
+    setNeighborhoodId("");
+    setVehicleId("");
+    setWeekday("");
   }
 
   async function excluir(id) {
@@ -126,8 +152,7 @@ export default function VinculoRotas() {
     <div
       style={{
         minHeight: "100vh",
-        background:
-          "linear-gradient(180deg, #f8f7fc 0%, #fff8f2 45%, #ffffff 100%)",
+        background: "linear-gradient(180deg, #f8f7fc 0%, #fff8f2 45%, #ffffff 100%)",
         padding: isMobile ? "18px 12px 36px" : "28px 18px 48px",
         fontFamily: "Arial, sans-serif",
       }}
@@ -148,45 +173,24 @@ export default function VinculoRotas() {
               display: "inline-flex",
               padding: "8px 14px",
               borderRadius: 999,
-              background: "#efeafd",
-              color: "#403d7c",
+              background: editandoId ? "#fff4e5" : "#efeafd",
+              color: editandoId ? "#ed823c" : "#403d7c",
               fontSize: 13,
               fontWeight: "bold",
               marginBottom: 18,
             }}
           >
-            Ferperez • Configuração
+            {editandoId ? "Ferperez • Editando Vínculo" : "Ferperez • Configuração"}
           </div>
 
-          <h1
-            style={{
-              margin: 0,
-              fontSize: isMobile ? 28 : 38,
-              color: "#0f172a",
-            }}
-          >
-            Vínculo de Rotas
+          <h1 style={{ margin: 0, fontSize: isMobile ? 28 : 38, color: "#0f172a" }}>
+            {editandoId ? "Editar Vínculo" : "Vínculo de Rotas"}
           </h1>
-
-          <p
-            style={{
-              marginTop: 10,
-              color: "#64748b",
-              fontSize: 15,
-              lineHeight: 1.6,
-              maxWidth: 820,
-            }}
-          >
-            Relacione rota, cidade, bairro, dia e veículo para montar a lógica
-            operacional da Ferperez RotaCerta.
-          </p>
 
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: isMobile
-                ? "1fr"
-                : "repeat(auto-fit, minmax(220px, 1fr))",
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(200px, 1fr))",
               gap: 12,
               marginTop: 22,
             }}
@@ -194,97 +198,43 @@ export default function VinculoRotas() {
             <select
               value={routeId}
               onChange={(e) => setRouteId(e.target.value)}
-              style={{
-                padding: "16px 18px",
-                borderRadius: 16,
-                border: "1px solid #ddd6f5",
-                fontSize: 16,
-                background: "#fff",
-                outline: "none",
-              }}
+              style={selectStyle}
             >
               <option value="">Selecione a rota</option>
-              {routes.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name}
-                </option>
-              ))}
+              {routes.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
             </select>
 
             <select
               value={cityId}
-              onChange={(e) => {
-                setCityId(e.target.value);
-                setNeighborhoodId("");
-              }}
-              style={{
-                padding: "16px 18px",
-                borderRadius: 16,
-                border: "1px solid #ddd6f5",
-                fontSize: 16,
-                background: "#fff",
-                outline: "none",
-              }}
+              onChange={(e) => { setCityId(e.target.value); setNeighborhoodId(""); }}
+              style={selectStyle}
             >
               <option value="">Selecione a cidade</option>
-              {cities.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
+              {cities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
 
             <select
               value={neighborhoodId}
               onChange={(e) => setNeighborhoodId(e.target.value)}
-              style={{
-                padding: "16px 18px",
-                borderRadius: 16,
-                border: "1px solid #ddd6f5",
-                fontSize: 16,
-                background: "#fff",
-                outline: "none",
-              }}
+              style={selectStyle}
             >
               <option value="">Selecione o bairro</option>
-              {bairrosFiltrados.map((n) => (
-                <option key={n.id} value={n.id}>
-                  {n.name}
-                </option>
-              ))}
+              {bairrosFiltrados.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}
             </select>
 
             <select
               value={vehicleId}
               onChange={(e) => setVehicleId(e.target.value)}
-              style={{
-                padding: "16px 18px",
-                borderRadius: 16,
-                border: "1px solid #ddd6f5",
-                fontSize: 16,
-                background: "#fff",
-                outline: "none",
-              }}
+              style={selectStyle}
             >
               <option value="">Selecione o veículo</option>
-              {vehicles.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.name}
-                </option>
-              ))}
+              {vehicles.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
             </select>
 
             <select
               value={weekday}
               onChange={(e) => setWeekday(e.target.value)}
-              style={{
-                padding: "16px 18px",
-                borderRadius: 16,
-                border: "1px solid #ddd6f5",
-                fontSize: 16,
-                background: "#fff",
-                outline: "none",
-              }}
+              style={selectStyle}
             >
               <option value="">Selecione o dia</option>
               <option value="0">Segunda-feira</option>
@@ -295,22 +245,28 @@ export default function VinculoRotas() {
               <option value="5">Todos os dias</option>
             </select>
 
-            <button
-              onClick={criarVinculo}
-              disabled={salvando}
-              style={{
-                padding: "16px 22px",
-                borderRadius: 16,
-                border: "none",
-                background: "#403d7c",
-                color: "#fff",
-                fontWeight: "bold",
-                cursor: "pointer",
-                minWidth: isMobile ? "100%" : 150,
-              }}
-            >
-              {salvando ? "Salvando..." : "Criar vínculo"}
-            </button>
+            <div style={{ display: "flex", gap: 8, gridColumn: isMobile ? "auto" : "span 1" }}>
+               <button
+                onClick={salvarVinculo}
+                disabled={salvando}
+                style={{
+                  ...buttonStyle,
+                  background: editandoId ? "#e0a839" : "#403d7c",
+                  flex: 1
+                }}
+              >
+                {salvando ? "Processando..." : editandoId ? "Salvar" : "Criar"}
+              </button>
+              
+              {editandoId && (
+                <button
+                  onClick={limparFormulario}
+                  style={{ ...buttonStyle, background: "#64748b", minWidth: 80 }}
+                >
+                  Cancelar
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -323,13 +279,7 @@ export default function VinculoRotas() {
             boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
           }}
         >
-          <h2
-            style={{
-              marginTop: 0,
-              color: "#0f172a",
-              fontSize: 24,
-            }}
-          >
+          <h2 style={{ marginTop: 0, color: "#0f172a", fontSize: 24 }}>
             Vínculos cadastrados
           </h2>
 
@@ -355,83 +305,90 @@ export default function VinculoRotas() {
                   }}
                 >
                   <div>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        color: "#64748b",
-                        fontWeight: "bold",
-                        marginBottom: 4,
-                      }}
-                    >
+                    <div style={{ fontSize: 13, color: "#64748b", fontWeight: "bold", marginBottom: 4 }}>
                       Vínculo #{i + 1}
                     </div>
-
-                    <div
-                      style={{
-                        fontSize: 22,
-                        fontWeight: "bold",
-                        color: "#0f172a",
-                        marginBottom: 8,
-                      }}
-                    >
+                    <div style={{ fontSize: 22, fontWeight: "bold", color: "#0f172a", marginBottom: 8 }}>
                       {item.route_name || "-"}
                     </div>
-
                     <div style={{ fontSize: 15, color: "#64748b", lineHeight: 1.7 }}>
-                      <div>
-                        Cidade: <strong>{item.city_name || "-"}</strong>
-                      </div>
-                      <div>
-                        Bairro: <strong>{item.neighborhood_name || "-"}</strong>
-                      </div>
-                      <div>
-                        Dia: <strong>{traduzirDia(item.weekday)}</strong>
-                      </div>
-                      <div>
-                        Veículo: <strong>{item.vehicle_name || "-"}</strong>
-                      </div>
+                      <div>Cidade: <strong>{item.city_name || "-"}</strong></div>
+                      <div>Bairro: <strong>{item.neighborhood_name || "-"}</strong></div>
+                      <div>Dia: <strong>{traduzirDia(item.weekday)}</strong></div>
+                      <div>Veículo: <strong>{item.vehicle_name || "-"}</strong></div>
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => excluir(item.id)}
-                    style={{
-                      padding: "12px 16px",
-                      borderRadius: 14,
-                      border: "none",
-                      background: "#ed823c",
-                      color: "#fff",
-                      fontWeight: "bold",
-                      cursor: "pointer",
-                      minWidth: isMobile ? "100%" : 120,
-                    }}
-                  >
-                    Excluir
-                  </button>
+                  <div style={{ display: "flex", gap: 10, flexDirection: isMobile ? "column" : "row" }}>
+                    <button
+                      onClick={() => prepararEdicao(item)}
+                      style={{
+                        ...actionButtonStyle,
+                        background: "#403d7c",
+                      }}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => excluir(item.id)}
+                      style={{
+                        ...actionButtonStyle,
+                        background: "#ed823c",
+                      }}
+                    >
+                      Excluir
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
 
           <a href="/dashboard" style={{ textDecoration: "none" }}>
-            <button
-              style={{
-                marginTop: 18,
-                width: isMobile ? "100%" : "auto",
-                padding: "14px 18px",
-                borderRadius: 14,
-                border: "1px solid #ece8f7",
-                background: "#fff",
-                color: "#403d7c",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              Voltar ao painel
-            </button>
+            <button style={backButtonStyle}>Voltar ao painel</button>
           </a>
         </div>
       </div>
     </div>
   );
 }
+
+// Estilos Reutilizáveis
+const selectStyle = {
+  padding: "16px 18px",
+  borderRadius: 16,
+  border: "1px solid #ddd6f5",
+  fontSize: 16,
+  background: "#fff",
+  outline: "none",
+};
+
+const buttonStyle = {
+  padding: "16px 22px",
+  borderRadius: 16,
+  border: "none",
+  color: "#fff",
+  fontWeight: "bold",
+  cursor: "pointer",
+};
+
+const actionButtonStyle = {
+  padding: "12px 16px",
+  borderRadius: 14,
+  border: "none",
+  color: "#fff",
+  fontWeight: "bold",
+  cursor: "pointer",
+  minWidth: 100,
+};
+
+const backButtonStyle = {
+  marginTop: 18,
+  padding: "14px 18px",
+  borderRadius: 14,
+  border: "1px solid #ece8f7",
+  background: "#fff",
+  color: "#403d7c",
+  fontWeight: "bold",
+  cursor: "pointer",
+};
