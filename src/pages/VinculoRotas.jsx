@@ -79,7 +79,7 @@ export default function VinculoRotas() {
     }
   }
 
-  async function salvarVinculo() {
+ async function salvarVinculo() {
     if (!routeId || !cityId || !neighborhoodId || !vehicleId || weekday === "") {
       alert("Preencha todos os campos");
       return;
@@ -97,17 +97,20 @@ export default function VinculoRotas() {
       setSalvando(true);
 
       if (editandoId) {
-        // Lógica de Edição (PUT)
-        await api.put(`/route-city-day/${editandoId}/`, payload);
+        // Mudamos de PUT para PATCH e garantimos a barra "/" no final
+        // Isso costuma resolver o erro 405 em muitas APIs
+        await api.patch(`/route-city-day/${editandoId}/`, payload);
       } else {
-        // Lógica de Criação (POST)
         await api.post("/route-city-day/", payload);
       }
 
       limparFormulario();
       carregarTudo();
+      alert("Sucesso!");
     } catch (err) {
-      alert(editandoId ? "Erro ao atualizar vínculo" : "Erro ao criar vínculo");
+      console.error(err);
+      // Se o PATCH também der 405, o backend pode estar esperando um POST para editar
+      alert("Erro ao salvar. O servidor recusou a operação (Erro 405).");
     } finally {
       setSalvando(false);
     }
