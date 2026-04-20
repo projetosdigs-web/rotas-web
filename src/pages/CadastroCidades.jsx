@@ -1,302 +1,70 @@
 import { useEffect, useState } from "react";
 import { api } from "../services/api";
+import axios from "axios";
 
 export default function CadastroCidades() {
-  const [nome, setNome] = useState("");
   const [cidades, setCidades] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [salvando, setSalvando] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [cidadesIBGE, setCidadesIBGE] = useState([]);
+  const [nome, setNome] = useState("");
   const [editandoId, setEditandoId] = useState(null);
 
   useEffect(() => {
-    function resize() {
-      setIsMobile(window.innerWidth <= 768);
-    }
-
-    resize();
-    window.addEventListener("resize", resize);
     carregarCidades();
-
-    return () => window.removeEventListener("resize", resize);
+    carregarIBGE();
   }, []);
 
+  async function carregarIBGE() {
+    try {
+      const res = await axios.get("https://servicodados.ibge.gov.br/api/v1/localidades/estados/35/municipios");
+      setCidadesIBGE(res.data.map(c => c.nome).sort());
+    } catch (err) { console.error(err); }
+  }
+
   async function carregarCidades() {
+    const res = await api.get("/cities/");
+    setCidades(res.data || []);
+  }
+
+  async function salvar() {
+    if (!nome) return;
     try {
-      setLoading(true);
-      const res = await api.get("/cities/");
-      setCidades(res.data || []);
-    } catch {
-      alert("Erro ao carregar cidades");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function iniciarEdicao(cidade) {
-    setEditandoId(cidade.id);
-    setNome(cidade.name || "");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  function cancelarEdicao() {
-    setEditandoId(null);
-    setNome("");
-  }
-
-  async function salvarCidade() {
-    if (!nome.trim()) {
-      alert("Digite o nome da cidade");
-      return;
-    }
-
-    try {
-      setSalvando(true);
-
       if (editandoId) {
-        await api.put(`/cities/${editandoId}`, {
-          name: nome.trim(),
-        });
+        await api.patch(`/cities/${editandoId}/`, { name: nome });
       } else {
-        await api.post("/cities/", {
-          name: nome.trim(),
-        });
+        await api.post("/cities/", { name: nome });
       }
-
-      setNome("");
-      setEditandoId(null);
-      carregarCidades();
-    } catch {
-      alert(editandoId ? "Erro ao editar cidade" : "Erro ao criar cidade");
-    } finally {
-      setSalvando(false);
-    }
-  }
-
-  async function excluir(id) {
-    const ok = window.confirm("Deseja excluir essa cidade?");
-    if (!ok) return;
-
-    try {
-      await api.delete(`/cities/${id}`);
-      if (editandoId === id) cancelarEdicao();
-      carregarCidades();
-    } catch {
-      alert("Erro ao excluir");
-    }
+      setNome(""); setEditandoId(null); carregarCidades();
+    } catch { alert("Erro ao salvar"); }
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background:
-          "linear-gradient(180deg, #f8f7fc 0%, #fff8f2 45%, #ffffff 100%)",
-        padding: isMobile ? "18px 12px 36px" : "28px 18px 48px",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
-      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: 28,
-            padding: isMobile ? 20 : 30,
-            boxShadow: "0 18px 45px rgba(15,23,42,0.08)",
-            border: "1px solid #ece8f7",
-            marginBottom: 24,
-          }}
-        >
-          <div
-            style={{
-              display: "inline-flex",
-              padding: "8px 14px",
-              borderRadius: 999,
-              background: "#efeafd",
-              color: "#403d7c",
-              fontSize: 13,
-              fontWeight: "bold",
-              marginBottom: 18,
-            }}
-          >
-            Ferperez • Cadastro
-          </div>
-
-          <h1 style={{ margin: 0, fontSize: isMobile ? 28 : 38, color: "#0f172a" }}>
-            {editandoId ? "Editar Cidade" : "Cadastro de Cidades"}
-          </h1>
-
-          <p style={{ marginTop: 10, color: "#64748b", fontSize: 15, lineHeight: 1.6 }}>
-            {editandoId
-              ? "Altere o nome da cidade e salve as mudanças."
-              : "Cadastre e organize as cidades atendidas pela operação comercial."}
-          </p>
-
-          <div
-            style={{
-              display: "flex",
-              flexDirection: isMobile ? "column" : "row",
-              gap: 12,
-              marginTop: 22,
-            }}
-          >
-            <input
-              placeholder="Nome da cidade"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && salvarCidade()}
-              style={{
-                flex: 1,
-                padding: "16px 18px",
-                borderRadius: 16,
-                border: "1px solid #ddd6f5",
-                fontSize: 16,
-                outline: "none",
-              }}
-            />
-
-            <button
-              onClick={salvarCidade}
-              disabled={salvando}
-              style={{
-                padding: "16px 22px",
-                borderRadius: 16,
-                border: "none",
-                background: "#403d7c",
-                color: "#fff",
-                fontWeight: "bold",
-                cursor: "pointer",
-                minWidth: isMobile ? "100%" : 150,
-              }}
-            >
-              {salvando ? "Salvando..." : editandoId ? "Salvar edição" : "Cadastrar"}
-            </button>
-
-            {editandoId && (
-              <button
-                onClick={cancelarEdicao}
-                style={{
-                  padding: "16px 22px",
-                  borderRadius: 16,
-                  border: "1px solid #ece8f7",
-                  background: "#fff",
-                  color: "#403d7c",
-                  fontWeight: "bold",
-                  cursor: "pointer",
-                  minWidth: isMobile ? "100%" : 150,
-                }}
-              >
-                Cancelar
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: 24,
-            padding: isMobile ? 18 : 24,
-            border: "1px solid #ece8f7",
-            boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
-          }}
-        >
-          <h2 style={{ marginTop: 0, color: "#0f172a", fontSize: 24 }}>
-            Cidades cadastradas
-          </h2>
-
-          {loading ? (
-            <p style={{ color: "#64748b" }}>Carregando...</p>
-          ) : cidades.length === 0 ? (
-            <p style={{ color: "#64748b" }}>Nenhuma cidade cadastrada.</p>
-          ) : (
-            <div style={{ display: "grid", gap: 12 }}>
-              {cidades.map((item, i) => (
-                <div
-                  key={item.id}
-                  style={{
-                    background: "#faf9fd",
-                    border: "1px solid #ece8f7",
-                    borderRadius: 18,
-                    padding: 18,
-                    display: "flex",
-                    flexDirection: isMobile ? "column" : "row",
-                    justifyContent: "space-between",
-                    alignItems: isMobile ? "stretch" : "center",
-                    gap: 12,
-                  }}
-                >
-                  <div>
-                    <div style={{ fontSize: 13, color: "#64748b", fontWeight: "bold", marginBottom: 4 }}>
-                      Cidade #{i + 1}
-                    </div>
-                    <div style={{ fontSize: 22, fontWeight: "bold", color: "#0f172a" }}>
-                      {item.name}
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: isMobile ? "column" : "row",
-                      gap: 10,
-                    }}
-                  >
-                    <button
-                      onClick={() => iniciarEdicao(item)}
-                      style={{
-                        padding: "12px 16px",
-                        borderRadius: 14,
-                        border: "none",
-                        background: "#403d7c",
-                        color: "#fff",
-                        fontWeight: "bold",
-                        cursor: "pointer",
-                        minWidth: isMobile ? "100%" : 120,
-                      }}
-                    >
-                      Editar
-                    </button>
-
-                    <button
-                      onClick={() => excluir(item.id)}
-                      style={{
-                        padding: "12px 16px",
-                        borderRadius: 14,
-                        border: "none",
-                        background: "#ed823c",
-                        color: "#fff",
-                        fontWeight: "bold",
-                        cursor: "pointer",
-                        minWidth: isMobile ? "100%" : 120,
-                      }}
-                    >
-                      Excluir
-                    </button>
-                  </div>
-                </div>
-              ))}
+    <div style={{ padding: 20, maxWidth: 600, margin: "0 auto", fontFamily: "Arial" }}>
+      <h2 style={{ color: "#403d7c" }}>Cidades (São Paulo)</h2>
+      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+        <input 
+          list="lista-ibge-cidades"
+          value={nome} 
+          onChange={e => setNome(e.target.value)} 
+          placeholder="Busque ou digite a cidade..." 
+          style={{ flex: 1, padding: 12, borderRadius: 8, border: "1px solid #ddd" }}
+        />
+        <datalist id="lista-ibge-cidades">
+          {cidadesIBGE.map(c => <option key={c} value={c} />)}
+        </datalist>
+        <button onClick={salvar} style={{ padding: 12, background: "#403d7c", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer" }}>
+          {editandoId ? "Atualizar" : "Cadastrar"}
+        </button>
+      </div>
+      <div style={{ display: "grid", gap: 10 }}>
+        {cidades.map(c => (
+          <div key={c.id} style={{ background: "#fff", padding: 15, borderRadius: 10, display: "flex", justifyContent: "space-between", border: "1px solid #eee" }}>
+            <span>{c.name}</span>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => { setNome(c.name); setEditandoId(c.id); }} style={{ color: "#403d7c", background: "none", border: "none", cursor: "pointer" }}>Editar</button>
+              <button onClick={async () => { if(confirm("Excluir?")) { await api.delete(`/cities/${c.id}/`); carregarCidades(); } }} style={{ color: "red", background: "none", border: "none", cursor: "pointer" }}>Excluir</button>
             </div>
-          )}
-
-          <a href="/dashboard" style={{ textDecoration: "none" }}>
-            <button
-              style={{
-                marginTop: 18,
-                width: isMobile ? "100%" : "auto",
-                padding: "14px 18px",
-                borderRadius: 14,
-                border: "1px solid #ece8f7",
-                background: "#fff",
-                color: "#403d7c",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              Voltar ao painel
-            </button>
-          </a>
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   );
