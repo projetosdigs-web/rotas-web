@@ -9,6 +9,7 @@ export default function CadastroBairros() {
   const [loading, setLoading] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [editandoId, setEditandoId] = useState(null);
 
   useEffect(() => {
     function resize() {
@@ -28,7 +29,7 @@ export default function CadastroBairros() {
       setLoading(true);
       const res = await api.get("/neighborhoods/");
       setBairros(res.data || []);
-    } catch (err) {
+    } catch {
       alert("Erro ao carregar bairros");
     } finally {
       setLoading(false);
@@ -39,12 +40,25 @@ export default function CadastroBairros() {
     try {
       const res = await api.get("/cities/");
       setCidades(res.data || []);
-    } catch (err) {
+    } catch {
       alert("Erro ao carregar cidades");
     }
   }
 
-  async function criarBairro() {
+  function iniciarEdicao(item) {
+    setEditandoId(item.id);
+    setNome(item.name || "");
+    setCityId(String(item.city_id || ""));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function cancelarEdicao() {
+    setEditandoId(null);
+    setNome("");
+    setCityId("");
+  }
+
+  async function salvarBairro() {
     if (!nome.trim()) {
       alert("Digite o nome do bairro");
       return;
@@ -58,16 +72,22 @@ export default function CadastroBairros() {
     try {
       setSalvando(true);
 
-      await api.post("/neighborhoods/", {
-        name: nome.trim(),
-        city_id: Number(cityId),
-      });
+      if (editandoId) {
+        await api.put(`/neighborhoods/${editandoId}`, {
+          name: nome.trim(),
+          city_id: Number(cityId),
+        });
+      } else {
+        await api.post("/neighborhoods/", {
+          name: nome.trim(),
+          city_id: Number(cityId),
+        });
+      }
 
-      setNome("");
-      setCityId("");
+      cancelarEdicao();
       carregarBairros();
-    } catch (err) {
-      alert("Erro ao criar bairro");
+    } catch {
+      alert(editandoId ? "Erro ao editar bairro" : "Erro ao criar bairro");
     } finally {
       setSalvando(false);
     }
@@ -79,6 +99,7 @@ export default function CadastroBairros() {
 
     try {
       await api.delete(`/neighborhoods/${id}`);
+      if (editandoId === id) cancelarEdicao();
       carregarBairros();
     } catch {
       alert("Erro ao excluir");
@@ -126,26 +147,14 @@ export default function CadastroBairros() {
             Ferperez • Cadastro
           </div>
 
-          <h1
-            style={{
-              margin: 0,
-              fontSize: isMobile ? 28 : 38,
-              color: "#0f172a",
-            }}
-          >
-            Cadastro de Bairros
+          <h1 style={{ margin: 0, fontSize: isMobile ? 28 : 38, color: "#0f172a" }}>
+            {editandoId ? "Editar Bairro" : "Cadastro de Bairros"}
           </h1>
 
-          <p
-            style={{
-              marginTop: 10,
-              color: "#64748b",
-              fontSize: 15,
-              lineHeight: 1.6,
-            }}
-          >
-            Cadastre bairros e relacione cada um à sua cidade para manter a
-            consulta comercial organizada.
+          <p style={{ marginTop: 10, color: "#64748b", fontSize: 15, lineHeight: 1.6 }}>
+            {editandoId
+              ? "Altere o bairro e sua cidade relacionada."
+              : "Cadastre bairros e relacione cada um à sua cidade."}
           </p>
 
           <div
@@ -192,7 +201,7 @@ export default function CadastroBairros() {
             </select>
 
             <button
-              onClick={criarBairro}
+              onClick={salvarBairro}
               disabled={salvando}
               style={{
                 padding: "16px 22px",
@@ -205,8 +214,26 @@ export default function CadastroBairros() {
                 minWidth: isMobile ? "100%" : 150,
               }}
             >
-              {salvando ? "Salvando..." : "Cadastrar"}
+              {salvando ? "Salvando..." : editandoId ? "Salvar edição" : "Cadastrar"}
             </button>
+
+            {editandoId && (
+              <button
+                onClick={cancelarEdicao}
+                style={{
+                  padding: "16px 22px",
+                  borderRadius: 16,
+                  border: "1px solid #ece8f7",
+                  background: "#fff",
+                  color: "#403d7c",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                  minWidth: isMobile ? "100%" : 150,
+                }}
+              >
+                Cancelar
+              </button>
+            )}
           </div>
         </div>
 
@@ -219,13 +246,7 @@ export default function CadastroBairros() {
             boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
           }}
         >
-          <h2
-            style={{
-              marginTop: 0,
-              color: "#0f172a",
-              fontSize: 24,
-            }}
-          >
+          <h2 style={{ marginTop: 0, color: "#0f172a", fontSize: 24 }}>
             Bairros cadastrados
           </h2>
 
@@ -251,56 +272,58 @@ export default function CadastroBairros() {
                   }}
                 >
                   <div>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        color: "#64748b",
-                        fontWeight: "bold",
-                        marginBottom: 4,
-                      }}
-                    >
+                    <div style={{ fontSize: 13, color: "#64748b", fontWeight: "bold", marginBottom: 4 }}>
                       Bairro #{i + 1}
                     </div>
 
-                    <div
-                      style={{
-                        fontSize: 22,
-                        fontWeight: "bold",
-                        color: "#0f172a",
-                        marginBottom: 6,
-                      }}
-                    >
+                    <div style={{ fontSize: 22, fontWeight: "bold", color: "#0f172a", marginBottom: 6 }}>
                       {item.name}
                     </div>
 
-                    <div
-                      style={{
-                        fontSize: 15,
-                        color: "#64748b",
-                      }}
-                    >
-                      Cidade:{" "}
-                      <strong>
-                        {item.city_name || getNomeCidade(item.city_id)}
-                      </strong>
+                    <div style={{ fontSize: 15, color: "#64748b" }}>
+                      Cidade: <strong>{item.city_name || getNomeCidade(item.city_id)}</strong>
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => excluir(item.id)}
+                  <div
                     style={{
-                      padding: "12px 16px",
-                      borderRadius: 14,
-                      border: "none",
-                      background: "#ed823c",
-                      color: "#fff",
-                      fontWeight: "bold",
-                      cursor: "pointer",
-                      minWidth: isMobile ? "100%" : 120,
+                      display: "flex",
+                      flexDirection: isMobile ? "column" : "row",
+                      gap: 10,
                     }}
                   >
-                    Excluir
-                  </button>
+                    <button
+                      onClick={() => iniciarEdicao(item)}
+                      style={{
+                        padding: "12px 16px",
+                        borderRadius: 14,
+                        border: "none",
+                        background: "#403d7c",
+                        color: "#fff",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        minWidth: isMobile ? "100%" : 120,
+                      }}
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      onClick={() => excluir(item.id)}
+                      style={{
+                        padding: "12px 16px",
+                        borderRadius: 14,
+                        border: "none",
+                        background: "#ed823c",
+                        color: "#fff",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        minWidth: isMobile ? "100%" : 120,
+                      }}
+                    >
+                      Excluir
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

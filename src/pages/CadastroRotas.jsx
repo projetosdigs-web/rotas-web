@@ -1,9 +1,38 @@
 import { useEffect, useState } from "react";
 import { api } from "../services/api";
 
-export default function CadastroRotas() {
-  const [nome, setNome] = useState("");
-  const [rotas, setRotas] = useState([]);
+function traduzirDia(valor) {
+  const dias = {
+    0: "Segunda-feira",
+    1: "Terça-feira",
+    2: "Quarta-feira",
+    3: "Quinta-feira",
+    4: "Sexta-feira",
+    5: "Todos os dias",
+    segunda: "Segunda-feira",
+    terca: "Terça-feira",
+    terça: "Terça-feira",
+    quarta: "Quarta-feira",
+    quinta: "Quinta-feira",
+    sexta: "Sexta-feira",
+    
+  };
+  return dias[valor] ?? valor ?? "-";
+}
+
+export default function VinculoRotas() {
+  const [routes, setRoutes] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [neighborhoods, setNeighborhoods] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [vinculos, setVinculos] = useState([]);
+
+  const [routeId, setRouteId] = useState("");
+  const [cityId, setCityId] = useState("");
+  const [neighborhoodId, setNeighborhoodId] = useState("");
+  const [vehicleId, setVehicleId] = useState("");
+  const [weekday, setWeekday] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -16,78 +45,102 @@ export default function CadastroRotas() {
 
     resize();
     window.addEventListener("resize", resize);
-    carregarRotas();
+    carregarTudo();
 
     return () => window.removeEventListener("resize", resize);
   }, []);
 
-  async function carregarRotas() {
+  async function carregarTudo() {
     try {
       setLoading(true);
-      const res = await api.get("/routes/");
-      setRotas(res.data || []);
-    } catch (err) {
-      alert("Erro ao carregar rotas");
+
+      const [r, c, n, v, vc] = await Promise.all([
+        api.get("/routes/"),
+        api.get("/cities/"),
+        api.get("/neighborhoods/"),
+        api.get("/vehicles/"),
+        api.get("/route-city-day/"),
+      ]);
+
+      setRoutes(r.data || []);
+      setCities(c.data || []);
+      setNeighborhoods(n.data || []);
+      setVehicles(v.data || []);
+      setVinculos(vc.data || []);
+    } catch {
+      alert("Erro ao carregar dados dos vínculos");
     } finally {
       setLoading(false);
     }
   }
 
-  function iniciarEdicao(rota) {
-    setEditandoId(rota.id);
-    setNome(rota.name || "");
+  function iniciarEdicao(item) {
+    setEditandoId(item.id);
+    setRouteId(String(item.route_id || ""));
+    setCityId(String(item.city_id || ""));
+    setNeighborhoodId(String(item.neighborhood_id || ""));
+    setVehicleId(String(item.vehicle_id || ""));
+    setWeekday(String(item.weekday ?? ""));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function cancelarEdicao() {
     setEditandoId(null);
-    setNome("");
+    setRouteId("");
+    setCityId("");
+    setNeighborhoodId("");
+    setVehicleId("");
+    setWeekday("");
   }
 
-  async function salvarRota() {
-    if (!nome.trim()) {
-      alert("Digite o nome da rota");
+  async function salvarVinculo() {
+    if (!routeId || !cityId || !neighborhoodId || !vehicleId || weekday === "") {
+      alert("Preencha todos os campos");
       return;
     }
 
     try {
       setSalvando(true);
 
+      const payload = {
+        route_id: Number(routeId),
+        city_id: Number(cityId),
+        neighborhood_id: Number(neighborhoodId),
+        vehicle_id: Number(vehicleId),
+        weekday,
+      };
+
       if (editandoId) {
-        await api.put(`/routes/${editandoId}`, {
-          name: nome.trim(),
-        });
+        await api.put(`/route-city-day/${editandoId}`, payload);
       } else {
-        await api.post("/routes/", {
-          name: nome.trim(),
-        });
+        await api.post("/route-city-day/", payload);
       }
 
-      setNome("");
-      setEditandoId(null);
-      carregarRotas();
-    } catch (err) {
-      console.error(err);
-      alert(editandoId ? "Erro ao editar rota" : "Erro ao criar rota");
+      cancelarEdicao();
+      carregarTudo();
+    } catch {
+      alert(editandoId ? "Erro ao editar vínculo" : "Erro ao criar vínculo");
     } finally {
       setSalvando(false);
     }
   }
 
   async function excluir(id) {
-    const ok = window.confirm("Deseja excluir essa rota?");
+    const ok = window.confirm("Deseja excluir esse vínculo?");
     if (!ok) return;
 
     try {
-      await api.delete(`/routes/${id}`);
-      if (editandoId === id) {
-        cancelarEdicao();
-      }
-      carregarRotas();
+      await api.delete(`/route-city-day/${id}`);
+      if (editandoId === id) cancelarEdicao();
+      carregarTudo();
     } catch {
-      alert("Erro ao excluir");
+      alert("Erro ao excluir vínculo");
     }
   }
+
+  const bairrosFiltrados = neighborhoods.filter(
+    (n) => !cityId || n.city_id === Number(cityId)
+  );
 
   return (
     <div
@@ -99,7 +152,7 @@ export default function CadastroRotas() {
         fontFamily: "Arial, sans-serif",
       }}
     >
-      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         <div
           style={{
             background: "#fff",
@@ -122,57 +175,98 @@ export default function CadastroRotas() {
               marginBottom: 18,
             }}
           >
-            Ferperez • Cadastro
+            Ferperez • Configuração
           </div>
 
-          <h1
-            style={{
-              margin: 0,
-              fontSize: isMobile ? 28 : 38,
-              color: "#0f172a",
-            }}
-          >
-            {editandoId ? "Editar Rota" : "Cadastro de Rotas"}
+          <h1 style={{ margin: 0, fontSize: isMobile ? 28 : 38, color: "#0f172a" }}>
+            {editandoId ? "Editar Vínculo" : "Vínculo de Rotas"}
           </h1>
 
-          <p
-            style={{
-              marginTop: 10,
-              color: "#64748b",
-              fontSize: 15,
-              lineHeight: 1.6,
-            }}
-          >
+          <p style={{ marginTop: 10, color: "#64748b", fontSize: 15, lineHeight: 1.6 }}>
             {editandoId
-              ? "Altere o nome da rota e salve as mudanças."
-              : "Cadastre e organize as rotas utilizadas pela operação comercial."}
+              ? "Altere o vínculo e salve as mudanças."
+              : "Relacione rota, cidade, bairro, dia e veículo para montar a lógica operacional."}
           </p>
 
           <div
             style={{
-              display: "flex",
-              flexDirection: isMobile ? "column" : "row",
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(220px, 1fr))",
               gap: 12,
               marginTop: 22,
             }}
           >
-            <input
-              placeholder="Nome da rota"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && salvarRota()}
-              style={{
-                flex: 1,
-                padding: "16px 18px",
-                borderRadius: 16,
-                border: "1px solid #ddd6f5",
-                fontSize: 16,
-                outline: "none",
+            <select
+              value={routeId}
+              onChange={(e) => setRouteId(e.target.value)}
+              style={selectStyle}
+            >
+              <option value="">Selecione a rota</option>
+              {routes.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={cityId}
+              onChange={(e) => {
+                setCityId(e.target.value);
+                setNeighborhoodId("");
               }}
-            />
+              style={selectStyle}
+            >
+              <option value="">Selecione a cidade</option>
+              {cities.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={neighborhoodId}
+              onChange={(e) => setNeighborhoodId(e.target.value)}
+              style={selectStyle}
+            >
+              <option value="">Selecione o bairro</option>
+              {bairrosFiltrados.map((n) => (
+                <option key={n.id} value={n.id}>
+                  {n.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={vehicleId}
+              onChange={(e) => setVehicleId(e.target.value)}
+              style={selectStyle}
+            >
+              <option value="">Selecione o veículo</option>
+              {vehicles.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={weekday}
+              onChange={(e) => setWeekday(e.target.value)}
+              style={selectStyle}
+            >
+              <option value="">Selecione o dia</option>
+              <option value="0">Segunda-feira</option>
+              <option value="1">Terça-feira</option>
+              <option value="2">Quarta-feira</option>
+              <option value="3">Quinta-feira</option>
+              <option value="4">Sexta-feira</option>
+              <option value="5">Todos os dias</option>
+            </select>
 
             <button
-              onClick={salvarRota}
+              onClick={salvarVinculo}
               disabled={salvando}
               style={{
                 padding: "16px 22px",
@@ -185,11 +279,7 @@ export default function CadastroRotas() {
                 minWidth: isMobile ? "100%" : 150,
               }}
             >
-              {salvando
-                ? "Salvando..."
-                : editandoId
-                ? "Salvar edição"
-                : "Cadastrar"}
+              {salvando ? "Salvando..." : editandoId ? "Salvar edição" : "Criar vínculo"}
             </button>
 
             {editandoId && (
@@ -203,7 +293,6 @@ export default function CadastroRotas() {
                   color: "#403d7c",
                   fontWeight: "bold",
                   cursor: "pointer",
-                  minWidth: isMobile ? "100%" : 150,
                 }}
               >
                 Cancelar
@@ -221,23 +310,17 @@ export default function CadastroRotas() {
             boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
           }}
         >
-          <h2
-            style={{
-              marginTop: 0,
-              color: "#0f172a",
-              fontSize: 24,
-            }}
-          >
-            Rotas cadastradas
+          <h2 style={{ marginTop: 0, color: "#0f172a", fontSize: 24 }}>
+            Vínculos cadastrados
           </h2>
 
           {loading ? (
             <p style={{ color: "#64748b" }}>Carregando...</p>
-          ) : rotas.length === 0 ? (
-            <p style={{ color: "#64748b" }}>Nenhuma rota cadastrada.</p>
+          ) : vinculos.length === 0 ? (
+            <p style={{ color: "#64748b" }}>Nenhum vínculo cadastrado.</p>
           ) : (
             <div style={{ display: "grid", gap: 12 }}>
-              {rotas.map((item, i) => (
+              {vinculos.map((item, i) => (
                 <div
                   key={item.id}
                   style={{
@@ -253,25 +336,19 @@ export default function CadastroRotas() {
                   }}
                 >
                   <div>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        color: "#64748b",
-                        fontWeight: "bold",
-                        marginBottom: 4,
-                      }}
-                    >
-                      Rota #{i + 1}
+                    <div style={{ fontSize: 13, color: "#64748b", fontWeight: "bold", marginBottom: 4 }}>
+                      Vínculo #{i + 1}
                     </div>
 
-                    <div
-                      style={{
-                        fontSize: 22,
-                        fontWeight: "bold",
-                        color: "#0f172a",
-                      }}
-                    >
-                      {item.name}
+                    <div style={{ fontSize: 22, fontWeight: "bold", color: "#0f172a", marginBottom: 8 }}>
+                      {item.route_name || "-"}
+                    </div>
+
+                    <div style={{ fontSize: 15, color: "#64748b", lineHeight: 1.7 }}>
+                      <div>Cidade: <strong>{item.city_name || "-"}</strong></div>
+                      <div>Bairro: <strong>{item.neighborhood_name || "-"}</strong></div>
+                      <div>Dia: <strong>{traduzirDia(item.weekday)}</strong></div>
+                      <div>Veículo: <strong>{item.vehicle_name || "-"}</strong></div>
                     </div>
                   </div>
 
@@ -341,3 +418,12 @@ export default function CadastroRotas() {
     </div>
   );
 }
+
+const selectStyle = {
+  padding: "16px 18px",
+  borderRadius: 16,
+  border: "1px solid #ddd6f5",
+  fontSize: 16,
+  background: "#fff",
+  outline: "none",
+};

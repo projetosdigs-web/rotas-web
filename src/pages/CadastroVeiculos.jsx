@@ -8,6 +8,7 @@ export default function CadastroVeiculos() {
   const [loading, setLoading] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [editandoId, setEditandoId] = useState(null);
 
   useEffect(() => {
     function resize() {
@@ -26,14 +27,27 @@ export default function CadastroVeiculos() {
       setLoading(true);
       const res = await api.get("/vehicles/");
       setVeiculos(res.data || []);
-    } catch (err) {
+    } catch {
       alert("Erro ao carregar veículos");
     } finally {
       setLoading(false);
     }
   }
 
-  async function criarVeiculo() {
+  function iniciarEdicao(item) {
+    setEditandoId(item.id);
+    setNome(item.name || "");
+    setPlaca(item.plate || "");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function cancelarEdicao() {
+    setEditandoId(null);
+    setNome("");
+    setPlaca("");
+  }
+
+  async function salvarVeiculo() {
     if (!nome.trim()) {
       alert("Digite o nome do veículo");
       return;
@@ -42,16 +56,22 @@ export default function CadastroVeiculos() {
     try {
       setSalvando(true);
 
-      await api.post("/vehicles/", {
-        name: nome.trim(),
-        plate: placa.trim(),
-      });
+      if (editandoId) {
+        await api.put(`/vehicles/${editandoId}`, {
+          name: nome.trim(),
+          plate: placa.trim(),
+        });
+      } else {
+        await api.post("/vehicles/", {
+          name: nome.trim(),
+          plate: placa.trim(),
+        });
+      }
 
-      setNome("");
-      setPlaca("");
+      cancelarEdicao();
       carregarVeiculos();
-    } catch (err) {
-      alert("Erro ao criar veículo");
+    } catch {
+      alert(editandoId ? "Erro ao editar veículo" : "Erro ao criar veículo");
     } finally {
       setSalvando(false);
     }
@@ -63,6 +83,7 @@ export default function CadastroVeiculos() {
 
     try {
       await api.delete(`/vehicles/${id}`);
+      if (editandoId === id) cancelarEdicao();
       carregarVeiculos();
     } catch {
       alert("Erro ao excluir");
@@ -105,25 +126,14 @@ export default function CadastroVeiculos() {
             Ferperez • Cadastro
           </div>
 
-          <h1
-            style={{
-              margin: 0,
-              fontSize: isMobile ? 28 : 38,
-              color: "#0f172a",
-            }}
-          >
-            Cadastro de Veículos
+          <h1 style={{ margin: 0, fontSize: isMobile ? 28 : 38, color: "#0f172a" }}>
+            {editandoId ? "Editar Veículo" : "Cadastro de Veículos"}
           </h1>
 
-          <p
-            style={{
-              marginTop: 10,
-              color: "#64748b",
-              fontSize: 15,
-              lineHeight: 1.6,
-            }}
-          >
-            Cadastre e organize os veículos utilizados nas rotas da operação.
+          <p style={{ marginTop: 10, color: "#64748b", fontSize: 15, lineHeight: 1.6 }}>
+            {editandoId
+              ? "Altere os dados do veículo e salve as mudanças."
+              : "Cadastre e organize os veículos utilizados nas rotas."}
           </p>
 
           <div
@@ -163,7 +173,7 @@ export default function CadastroVeiculos() {
             />
 
             <button
-              onClick={criarVeiculo}
+              onClick={salvarVeiculo}
               disabled={salvando}
               style={{
                 padding: "16px 22px",
@@ -176,8 +186,26 @@ export default function CadastroVeiculos() {
                 minWidth: isMobile ? "100%" : 150,
               }}
             >
-              {salvando ? "Salvando..." : "Cadastrar"}
+              {salvando ? "Salvando..." : editandoId ? "Salvar edição" : "Cadastrar"}
             </button>
+
+            {editandoId && (
+              <button
+                onClick={cancelarEdicao}
+                style={{
+                  padding: "16px 22px",
+                  borderRadius: 16,
+                  border: "1px solid #ece8f7",
+                  background: "#fff",
+                  color: "#403d7c",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                  minWidth: isMobile ? "100%" : 150,
+                }}
+              >
+                Cancelar
+              </button>
+            )}
           </div>
         </div>
 
@@ -190,13 +218,7 @@ export default function CadastroVeiculos() {
             boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
           }}
         >
-          <h2
-            style={{
-              marginTop: 0,
-              color: "#0f172a",
-              fontSize: 24,
-            }}
-          >
+          <h2 style={{ marginTop: 0, color: "#0f172a", fontSize: 24 }}>
             Veículos cadastrados
           </h2>
 
@@ -222,53 +244,58 @@ export default function CadastroVeiculos() {
                   }}
                 >
                   <div>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        color: "#64748b",
-                        fontWeight: "bold",
-                        marginBottom: 4,
-                      }}
-                    >
+                    <div style={{ fontSize: 13, color: "#64748b", fontWeight: "bold", marginBottom: 4 }}>
                       Veículo #{i + 1}
                     </div>
 
-                    <div
-                      style={{
-                        fontSize: 22,
-                        fontWeight: "bold",
-                        color: "#0f172a",
-                        marginBottom: 6,
-                      }}
-                    >
+                    <div style={{ fontSize: 22, fontWeight: "bold", color: "#0f172a", marginBottom: 6 }}>
                       {item.name}
                     </div>
 
-                    <div
-                      style={{
-                        fontSize: 15,
-                        color: "#64748b",
-                      }}
-                    >
+                    <div style={{ fontSize: 15, color: "#64748b" }}>
                       Placa: <strong>{item.plate || "-"}</strong>
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => excluir(item.id)}
+                  <div
                     style={{
-                      padding: "12px 16px",
-                      borderRadius: 14,
-                      border: "none",
-                      background: "#ed823c",
-                      color: "#fff",
-                      fontWeight: "bold",
-                      cursor: "pointer",
-                      minWidth: isMobile ? "100%" : 120,
+                      display: "flex",
+                      flexDirection: isMobile ? "column" : "row",
+                      gap: 10,
                     }}
                   >
-                    Excluir
-                  </button>
+                    <button
+                      onClick={() => iniciarEdicao(item)}
+                      style={{
+                        padding: "12px 16px",
+                        borderRadius: 14,
+                        border: "none",
+                        background: "#403d7c",
+                        color: "#fff",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        minWidth: isMobile ? "100%" : 120,
+                      }}
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      onClick={() => excluir(item.id)}
+                      style={{
+                        padding: "12px 16px",
+                        borderRadius: 14,
+                        border: "none",
+                        background: "#ed823c",
+                        color: "#fff",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        minWidth: isMobile ? "100%" : 120,
+                      }}
+                    >
+                      Excluir
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

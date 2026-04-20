@@ -7,6 +7,7 @@ export default function CadastroCidades() {
   const [loading, setLoading] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [editandoId, setEditandoId] = useState(null);
 
   useEffect(() => {
     function resize() {
@@ -25,14 +26,25 @@ export default function CadastroCidades() {
       setLoading(true);
       const res = await api.get("/cities/");
       setCidades(res.data || []);
-    } catch (err) {
+    } catch {
       alert("Erro ao carregar cidades");
     } finally {
       setLoading(false);
     }
   }
 
-  async function criarCidade() {
+  function iniciarEdicao(cidade) {
+    setEditandoId(cidade.id);
+    setNome(cidade.name || "");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function cancelarEdicao() {
+    setEditandoId(null);
+    setNome("");
+  }
+
+  async function salvarCidade() {
     if (!nome.trim()) {
       alert("Digite o nome da cidade");
       return;
@@ -41,14 +53,21 @@ export default function CadastroCidades() {
     try {
       setSalvando(true);
 
-      await api.post("/cities/", {
-        name: nome.trim(),
-      });
+      if (editandoId) {
+        await api.put(`/cities/${editandoId}`, {
+          name: nome.trim(),
+        });
+      } else {
+        await api.post("/cities/", {
+          name: nome.trim(),
+        });
+      }
 
       setNome("");
+      setEditandoId(null);
       carregarCidades();
-    } catch (err) {
-      alert("Erro ao criar cidade");
+    } catch {
+      alert(editandoId ? "Erro ao editar cidade" : "Erro ao criar cidade");
     } finally {
       setSalvando(false);
     }
@@ -60,6 +79,7 @@ export default function CadastroCidades() {
 
     try {
       await api.delete(`/cities/${id}`);
+      if (editandoId === id) cancelarEdicao();
       carregarCidades();
     } catch {
       alert("Erro ao excluir");
@@ -102,25 +122,14 @@ export default function CadastroCidades() {
             Ferperez • Cadastro
           </div>
 
-          <h1
-            style={{
-              margin: 0,
-              fontSize: isMobile ? 28 : 38,
-              color: "#0f172a",
-            }}
-          >
-            Cadastro de Cidades
+          <h1 style={{ margin: 0, fontSize: isMobile ? 28 : 38, color: "#0f172a" }}>
+            {editandoId ? "Editar Cidade" : "Cadastro de Cidades"}
           </h1>
 
-          <p
-            style={{
-              marginTop: 10,
-              color: "#64748b",
-              fontSize: 15,
-              lineHeight: 1.6,
-            }}
-          >
-            Cadastre e organize as cidades atendidas pela operação comercial.
+          <p style={{ marginTop: 10, color: "#64748b", fontSize: 15, lineHeight: 1.6 }}>
+            {editandoId
+              ? "Altere o nome da cidade e salve as mudanças."
+              : "Cadastre e organize as cidades atendidas pela operação comercial."}
           </p>
 
           <div
@@ -135,7 +144,7 @@ export default function CadastroCidades() {
               placeholder="Nome da cidade"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && criarCidade()}
+              onKeyDown={(e) => e.key === "Enter" && salvarCidade()}
               style={{
                 flex: 1,
                 padding: "16px 18px",
@@ -147,7 +156,7 @@ export default function CadastroCidades() {
             />
 
             <button
-              onClick={criarCidade}
+              onClick={salvarCidade}
               disabled={salvando}
               style={{
                 padding: "16px 22px",
@@ -160,8 +169,26 @@ export default function CadastroCidades() {
                 minWidth: isMobile ? "100%" : 150,
               }}
             >
-              {salvando ? "Salvando..." : "Cadastrar"}
+              {salvando ? "Salvando..." : editandoId ? "Salvar edição" : "Cadastrar"}
             </button>
+
+            {editandoId && (
+              <button
+                onClick={cancelarEdicao}
+                style={{
+                  padding: "16px 22px",
+                  borderRadius: 16,
+                  border: "1px solid #ece8f7",
+                  background: "#fff",
+                  color: "#403d7c",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                  minWidth: isMobile ? "100%" : 150,
+                }}
+              >
+                Cancelar
+              </button>
+            )}
           </div>
         </div>
 
@@ -174,13 +201,7 @@ export default function CadastroCidades() {
             boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
           }}
         >
-          <h2
-            style={{
-              marginTop: 0,
-              color: "#0f172a",
-              fontSize: 24,
-            }}
-          >
+          <h2 style={{ marginTop: 0, color: "#0f172a", fontSize: 24 }}>
             Cidades cadastradas
           </h2>
 
@@ -206,43 +227,53 @@ export default function CadastroCidades() {
                   }}
                 >
                   <div>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        color: "#64748b",
-                        fontWeight: "bold",
-                        marginBottom: 4,
-                      }}
-                    >
+                    <div style={{ fontSize: 13, color: "#64748b", fontWeight: "bold", marginBottom: 4 }}>
                       Cidade #{i + 1}
                     </div>
-
-                    <div
-                      style={{
-                        fontSize: 22,
-                        fontWeight: "bold",
-                        color: "#0f172a",
-                      }}
-                    >
+                    <div style={{ fontSize: 22, fontWeight: "bold", color: "#0f172a" }}>
                       {item.name}
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => excluir(item.id)}
+                  <div
                     style={{
-                      padding: "12px 16px",
-                      borderRadius: 14,
-                      border: "none",
-                      background: "#ed823c",
-                      color: "#fff",
-                      fontWeight: "bold",
-                      cursor: "pointer",
-                      minWidth: isMobile ? "100%" : 120,
+                      display: "flex",
+                      flexDirection: isMobile ? "column" : "row",
+                      gap: 10,
                     }}
                   >
-                    Excluir
-                  </button>
+                    <button
+                      onClick={() => iniciarEdicao(item)}
+                      style={{
+                        padding: "12px 16px",
+                        borderRadius: 14,
+                        border: "none",
+                        background: "#403d7c",
+                        color: "#fff",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        minWidth: isMobile ? "100%" : 120,
+                      }}
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      onClick={() => excluir(item.id)}
+                      style={{
+                        padding: "12px 16px",
+                        borderRadius: 14,
+                        border: "none",
+                        background: "#ed823c",
+                        color: "#fff",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        minWidth: isMobile ? "100%" : 120,
+                      }}
+                    >
+                      Excluir
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
