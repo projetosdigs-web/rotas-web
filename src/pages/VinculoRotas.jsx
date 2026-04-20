@@ -6,39 +6,35 @@ export default function VinculoRotas() {
   const [routes, setRoutes] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [vinculos, setVinculos] = useState([]);
+  const [cidadesSP, setCidadesSP] = useState([]); // Lista global do IBGE
   
-  // Lista de cidades vindas do IBGE
-  const [cidadesSP, setCidadesSP] = useState([]);
-  
-  // Estados do formulário
   const [routeId, setRouteId] = useState("");
   const [vehicleId, setVehicleId] = useState("");
-  const [cityInput, setCityInput] = useState(""); // Texto da busca
+  const [cityInput, setCityInput] = useState(""); 
   const [neighborhood, setNeighborhood] = useState("");
   const [weekday, setWeekday] = useState("");
 
   const [editandoId, setEditandoId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [salvando, setSalvando] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
-    function resize() { setIsMobile(window.innerWidth <= 768); }
-    window.addEventListener("resize", resize);
-    resize();
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
     carregarDadosIniciais();
-    carregarCidadesIBGE();
-    return () => window.removeEventListener("resize", resize);
+    carregarCidadesIBGE(); // Carrega o "cérebro" do IBGE
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // 1. Busca todas as cidades de SP no IBGE
   async function carregarCidadesIBGE() {
     try {
+      // Código 35 é São Paulo
       const res = await axios.get("https://servicodados.ibge.gov.br/api/v1/localidades/estados/35/municipios");
       const nomesCidades = res.data.map(c => c.nome).sort();
       setCidadesSP(nomesCidades);
     } catch (err) {
-      console.error("Erro ao buscar IBGE", err);
+      console.error("Erro IBGE:", err);
     }
   }
 
@@ -54,36 +50,33 @@ export default function VinculoRotas() {
       setVehicles(v.data || []);
       setVinculos(vi.data || []);
     } catch (err) {
-      alert("Erro ao carregar dados do servidor");
+      console.error("Erro Backend:", err);
     } finally {
       setLoading(false);
     }
   }
 
-  // 2. Lógica de Auto-Cadastro de Cidade
   async function obterOuCriarCidade(nomeCidade) {
     const resCidades = await api.get("/cities/");
     const cidadeExistente = resCidades.data.find(
-      c => c.name.toLowerCase() === nomeCidade.toLowerCase()
+      c => c.name.trim().toLowerCase() === nomeCidade.trim().toLowerCase()
     );
 
     if (cidadeExistente) return cidadeExistente.id;
 
-    // Se não existe, cadastra automaticamente
-    const novaCidade = await api.post("/cities/", { name: nomeCidade });
+    // Se a cidade do IBGE não está no seu banco, cadastra agora
+    const novaCidade = await api.post("/cities/", { name: nomeCidade.trim() });
     return novaCidade.data.id;
   }
 
   async function salvarVinculo() {
     if (!routeId || !vehicleId || !cityInput || !weekday) {
-      alert("Por favor, preencha todos os campos obrigatórios");
+      alert("Preencha os campos obrigatórios (Rota, Veículo, Cidade e Dia)");
       return;
     }
 
     try {
       setSalvando(true);
-
-      // Passo A: Garante que a cidade existe no seu banco
       const cityId = await obterOuCriarCidade(cityInput);
 
       const payload = {
@@ -103,7 +96,7 @@ export default function VinculoRotas() {
       limparFormulario();
       carregarDadosIniciais();
     } catch (err) {
-      alert("Erro ao salvar o vínculo de rota");
+      alert("Erro ao salvar vínculo");
     } finally {
       setSalvando(false);
     }
@@ -113,7 +106,7 @@ export default function VinculoRotas() {
     setEditandoId(item.id);
     setRouteId(item.route_id);
     setVehicleId(item.vehicle_id);
-    setCityInput(item.city_name || ""); 
+    setCityInput(item.city_name);
     setNeighborhood(item.neighborhood_name || "");
     setWeekday(item.weekday);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -129,7 +122,7 @@ export default function VinculoRotas() {
   }
 
   async function excluir(id) {
-    if (!window.confirm("Excluir este atendimento?")) return;
+    if (!window.confirm("Remover este atendimento?")) return;
     try {
       await api.delete(`/route-neighborhoods/${id}/`);
       carregarDadosIniciais();
@@ -137,107 +130,94 @@ export default function VinculoRotas() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #f8f7fc 0%, #fff8f2 100%)", padding: isMobile ? "18px 12px" : "28px 18px", fontFamily: "Arial, sans-serif" }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+    <div style={{ minHeight: "100vh", background: "#f8f7fc", padding: isMobile ? "15px" : "30px", fontFamily: "Arial, sans-serif" }}>
+      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
         
-        {/* FORMULÁRIO INTELIGENTE */}
-        <div style={{ background: "#fff", padding: isMobile ? 20 : 35, borderRadius: 28, boxShadow: "0 18px 45px rgba(15,23,42,0.08)", border: "1px solid #ece8f7", marginBottom: 30 }}>
-          <div style={{ display: "inline-flex", padding: "8px 14px", borderRadius: 999, background: editandoId ? "#fff3ea" : "#efeafd", color: editandoId ? "#ed823c" : "#403d7c", fontSize: 13, fontWeight: "bold", marginBottom: 18 }}>
-            Ferperez • Automação IBGE São Paulo
-          </div>
-          <h1 style={{ margin: 0, fontSize: isMobile ? 26 : 36, color: "#0f172a" }}>
-            {editandoId ? "Editar Atendimento" : "Vincular Nova Rota"}
-          </h1>
-
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 15, marginTop: 25 }}>
-            
-            <div style={fieldGroup}>
-              <label style={labelStyle}>Rota</label>
-              <select value={routeId} onChange={e => setRouteId(e.target.value)} style={inputStyle}>
-                <option value="">Selecione a Rota</option>
-                {routes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-              </select>
-            </div>
-
-            <div style={fieldGroup}>
-              <label style={labelStyle}>Cidade (Busca Automática SP)</label>
+        <div style={{ background: "#fff", padding: isMobile ? 20 : 30, borderRadius: 24, boxShadow: "0 10px 30px rgba(0,0,0,0.05)", marginBottom: 25 }}>
+          <h1 style={{ color: "#403d7c", fontSize: 24, marginBottom: 20 }}>{editandoId ? "Editar Atendimento" : "Novo Atendimento Logístico"}</h1>
+          
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 15 }}>
+            <div style={inputGroup}>
+              <label style={labelStyle}>Cidade (SP - IBGE)</label>
               <input 
-                list="cidades-sp"
-                placeholder="Digite a cidade..."
-                value={cityInput}
-                onChange={e => setCityInput(e.target.value)}
+                list="lista-ibge" 
+                value={cityInput} 
+                onChange={e => setCityInput(e.target.value)} 
+                placeholder="Busque qualquer cidade de SP..." 
                 style={inputStyle}
               />
-              <datalist id="cidades-sp">
+              <datalist id="lista-ibge">
                 {cidadesSP.map(c => <option key={c} value={c} />)}
               </datalist>
             </div>
 
-            <div style={fieldGroup}>
-              <label style={labelStyle}>Dia de Atendimento</label>
-              <select value={weekday} onChange={e => setWeekday(e.target.value)} style={inputStyle}>
-                <option value="">Selecione o Dia</option>
-                <option value="0">Segunda-feira</option>
-                <option value="1">Terça-feira</option>
-                <option value="2">Quarta-feira</option>
-                <option value="3">Quinta-feira</option>
-                <option value="4">Sexta-feira</option>
-                <option value="5">Todos os dias</option>
+            <div style={inputGroup}>
+              <label style={labelStyle}>Bairro / Região</label>
+              <input value={neighborhood} onChange={e => setNeighborhood(e.target.value)} placeholder="Ex: Centro" style={inputStyle} />
+            </div>
+
+            <div style={inputGroup}>
+              <label style={labelStyle}>Rota</label>
+              <select value={routeId} onChange={e => setRouteId(e.target.value)} style={inputStyle}>
+                <option value="">Selecione...</option>
+                {routes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
               </select>
             </div>
 
-            <div style={fieldGroup}>
-              <label style={labelStyle}>Veículo Responsável</label>
+            <div style={inputGroup}>
+              <label style={labelStyle}>Veículo</label>
               <select value={vehicleId} onChange={e => setVehicleId(e.target.value)} style={inputStyle}>
-                <option value="">Selecione o Veículo</option>
+                <option value="">Selecione...</option>
                 {vehicles.map(v => <option key={v.id} value={v.id}>{v.name} ({v.plate})</option>)}
               </select>
             </div>
 
-            <div style={fieldGroup}>
-              <label style={labelStyle}>Bairro (Opcional)</label>
-              <input placeholder="Ex: Vila Rami" value={neighborhood} onChange={e => setNeighborhood(e.target.value)} style={inputStyle} />
+            <div style={inputGroup}>
+              <label style={labelStyle}>Dia</label>
+              <select value={weekday} onChange={e => setWeekday(e.target.value)} style={inputStyle}>
+                <option value="">Selecione...</option>
+                <option value="0">Segunda</option>
+                <option value="1">Terça</option>
+                <option value="2">Quarta</option>
+                <option value="3">Quinta</option>
+                <option value="4">Sexta</option>
+                <option value="5">Todos os dias</option>
+              </select>
             </div>
 
-            <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
-              <button onClick={salvarVinculo} disabled={salvando} style={{ ...btnPrincipal, background: editandoId ? "#e0a839" : "#403d7c", flex: 1 }}>
-                {salvando ? "Processando..." : editandoId ? "Atualizar" : "Confirmar Vínculo"}
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 10 }}>
+              <button onClick={salvarVinculo} disabled={salvando} style={btnStyle}>
+                {salvando ? "Aguarde..." : editandoId ? "Atualizar" : "Vincular"}
               </button>
-              {editandoId && <button onClick={limparFormulario} style={btnCancel}>Cancelar</button>}
+              {editandoId && <button onClick={limparFormulario} style={btnCancel}>X</button>}
             </div>
           </div>
         </div>
 
-        {/* LISTAGEM DE ATENDIMENTOS */}
-        <div style={{ background: "#fff", padding: 25, borderRadius: 24, border: "1px solid #ece8f7", boxShadow: "0 10px 30px rgba(15,23,42,0.06)" }}>
-          <h2 style={{ marginTop: 0, color: "#0f172a" }}>Malha Logística Atual</h2>
-          {loading ? <p>Carregando malha...</p> : (
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(320px, 1fr))", gap: 15 }}>
-              {vinculos.map(item => (
-                <div key={item.id} style={itemCard}>
-                  <div style={{ borderLeft: `5px solid #403d7c`, paddingLeft: 12 }}>
-                    <div style={{ fontSize: 12, color: "#ed823c", fontWeight: "bold", textTransform: "uppercase" }}>{item.route_name}</div>
-                    <div style={{ fontSize: 18, fontWeight: "bold", color: "#0f172a" }}>{item.city_name}</div>
-                    <div style={{ fontSize: 14, color: "#64748b" }}>{item.neighborhood_name || "Centro / Geral"}</div>
-                  </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                    <button onClick={() => prepararEdicao(item)} style={btnAcao}>Editar</button>
-                    <button onClick={() => excluir(item.id)} style={{ ...btnAcao, background: "#fff0f0", color: "#e11d48" }}>Excluir</button>
-                  </div>
-                </div>
-              ))}
+        {/* Listagem compacta */}
+        <div style={{ display: "grid", gap: 10 }}>
+          {vinculos.map(v => (
+            <div key={v.id} style={cardItem}>
+              <div>
+                <strong style={{ color: "#403d7c" }}>{v.city_name}</strong> - {v.neighborhood_name || "Geral"}
+                <div style={{ fontSize: 12, color: "#64748b" }}>Rota: {v.route_name} | {v.vehicle_name}</div>
+              </div>
+              <div style={{ display: "flex", gap: 5 }}>
+                <button onClick={() => prepararEdicao(v)} style={btnAcao}>Edit</button>
+                <button onClick={() => excluir(v.id)} style={{ ...btnAcao, color: "red" }}>Sair</button>
+              </div>
             </div>
-          )}
+          ))}
         </div>
       </div>
     </div>
   );
 }
 
-const fieldGroup = { display: "flex", flexDirection: "column", gap: 6 };
-const labelStyle = { fontSize: 13, fontWeight: "bold", color: "#64748b", marginLeft: 4 };
-const inputStyle = { padding: "14px", borderRadius: 12, border: "1px solid #ddd6f5", fontSize: 15, outline: "none", background: "#fcfcff" };
-const btnPrincipal = { padding: "15px", borderRadius: 12, border: "none", color: "#fff", fontWeight: "bold", cursor: "pointer", fontSize: 15 };
-const btnCancel = { padding: "15px", borderRadius: 12, border: "1px solid #e2e8f0", background: "#fff", color: "#64748b", cursor: "pointer", fontWeight: "bold" };
-const itemCard = { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "15px", background: "#faf9fd", borderRadius: 20, border: "1px solid #ece8f7" };
-const btnAcao = { padding: "8px 12px", borderRadius: 10, border: "none", background: "#efeafd", color: "#403d7c", fontWeight: "bold", cursor: "pointer", fontSize: 12 };
+const inputGroup = { display: "flex", flexDirection: "column", gap: 5 };
+const labelStyle = { fontSize: 12, fontWeight: "bold", color: "#64748b" };
+const inputStyle = { padding: "12px", borderRadius: 10, border: "1px solid #ddd", fontSize: 15 };
+const btnStyle = { flex: 1, padding: "12px", borderRadius: 10, border: "none", background: "#403d7c", color: "#fff", fontWeight: "bold", cursor: "pointer" };
+const btnCancel = { padding: "12px", borderRadius: 10, border: "1px solid #ddd", background: "#fff", cursor: "pointer" };
+const cardItem = { background: "#fff", padding: "15px", borderRadius: 15, display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 2px 5px rgba(0,0,0,0.03)" };
+const btnAcao = { border: "none", background: "none", fontWeight: "bold", color: "#403d7c", cursor: "pointer" };
