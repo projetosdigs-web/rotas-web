@@ -7,6 +7,7 @@ export default function CadastroRotas() {
   const [loading, setLoading] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [editandoId, setEditandoId] = useState(null);
 
   useEffect(() => {
     function resize() {
@@ -32,7 +33,18 @@ export default function CadastroRotas() {
     }
   }
 
-  async function criarRota() {
+  function iniciarEdicao(rota) {
+    setEditandoId(rota.id);
+    setNome(rota.name || "");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function cancelarEdicao() {
+    setEditandoId(null);
+    setNome("");
+  }
+
+  async function salvarRota() {
     if (!nome.trim()) {
       alert("Digite o nome da rota");
       return;
@@ -41,14 +53,22 @@ export default function CadastroRotas() {
     try {
       setSalvando(true);
 
-      await api.post("/routes/", {
-        name: nome.trim(),
-      });
+      if (editandoId) {
+        await api.put(`/routes/${editandoId}`, {
+          name: nome.trim(),
+        });
+      } else {
+        await api.post("/routes/", {
+          name: nome.trim(),
+        });
+      }
 
       setNome("");
+      setEditandoId(null);
       carregarRotas();
     } catch (err) {
-      alert("Erro ao criar rota");
+      console.error(err);
+      alert(editandoId ? "Erro ao editar rota" : "Erro ao criar rota");
     } finally {
       setSalvando(false);
     }
@@ -60,6 +80,9 @@ export default function CadastroRotas() {
 
     try {
       await api.delete(`/routes/${id}`);
+      if (editandoId === id) {
+        cancelarEdicao();
+      }
       carregarRotas();
     } catch {
       alert("Erro ao excluir");
@@ -109,7 +132,7 @@ export default function CadastroRotas() {
               color: "#0f172a",
             }}
           >
-            Cadastro de Rotas
+            {editandoId ? "Editar Rota" : "Cadastro de Rotas"}
           </h1>
 
           <p
@@ -120,7 +143,9 @@ export default function CadastroRotas() {
               lineHeight: 1.6,
             }}
           >
-            Cadastre e organize as rotas utilizadas pela operação comercial.
+            {editandoId
+              ? "Altere o nome da rota e salve as mudanças."
+              : "Cadastre e organize as rotas utilizadas pela operação comercial."}
           </p>
 
           <div
@@ -135,7 +160,7 @@ export default function CadastroRotas() {
               placeholder="Nome da rota"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && criarRota()}
+              onKeyDown={(e) => e.key === "Enter" && salvarRota()}
               style={{
                 flex: 1,
                 padding: "16px 18px",
@@ -147,7 +172,7 @@ export default function CadastroRotas() {
             />
 
             <button
-              onClick={criarRota}
+              onClick={salvarRota}
               disabled={salvando}
               style={{
                 padding: "16px 22px",
@@ -160,8 +185,30 @@ export default function CadastroRotas() {
                 minWidth: isMobile ? "100%" : 150,
               }}
             >
-              {salvando ? "Salvando..." : "Cadastrar"}
+              {salvando
+                ? "Salvando..."
+                : editandoId
+                ? "Salvar edição"
+                : "Cadastrar"}
             </button>
+
+            {editandoId && (
+              <button
+                onClick={cancelarEdicao}
+                style={{
+                  padding: "16px 22px",
+                  borderRadius: 16,
+                  border: "1px solid #ece8f7",
+                  background: "#fff",
+                  color: "#403d7c",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                  minWidth: isMobile ? "100%" : 150,
+                }}
+              >
+                Cancelar
+              </button>
+            )}
           </div>
         </div>
 
@@ -228,21 +275,45 @@ export default function CadastroRotas() {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => excluir(item.id)}
+                  <div
                     style={{
-                      padding: "12px 16px",
-                      borderRadius: 14,
-                      border: "none",
-                      background: "#ed823c",
-                      color: "#fff",
-                      fontWeight: "bold",
-                      cursor: "pointer",
-                      minWidth: isMobile ? "100%" : 120,
+                      display: "flex",
+                      flexDirection: isMobile ? "column" : "row",
+                      gap: 10,
                     }}
                   >
-                    Excluir
-                  </button>
+                    <button
+                      onClick={() => iniciarEdicao(item)}
+                      style={{
+                        padding: "12px 16px",
+                        borderRadius: 14,
+                        border: "none",
+                        background: "#403d7c",
+                        color: "#fff",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        minWidth: isMobile ? "100%" : 120,
+                      }}
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      onClick={() => excluir(item.id)}
+                      style={{
+                        padding: "12px 16px",
+                        borderRadius: 14,
+                        border: "none",
+                        background: "#ed823c",
+                        color: "#fff",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        minWidth: isMobile ? "100%" : 120,
+                      }}
+                    >
+                      Excluir
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
