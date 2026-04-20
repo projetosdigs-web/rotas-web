@@ -13,12 +13,10 @@ import VinculoRotas from "./pages/VinculoRotas";
 
 import PrivateRoute from "./components/PrivateRoute";
 
-
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-
         {/* 🔓 PÚBLICO */}
         <Route path="/" element={<ConsultaCidade />} />
         <Route path="/consulta" element={<ConsultaCidade />} />
@@ -81,6 +79,9 @@ export default function App() {
             </PrivateRoute>
           }
         />
+
+        {/* 🛡️ ROTA DE SEGURANÇA (Caso o link da Vercel se perca ou a URL não exista) */}
+        <Route path="*" element={<ConsultaCidade />} />
 
       </Routes>
     </BrowserRouter>
