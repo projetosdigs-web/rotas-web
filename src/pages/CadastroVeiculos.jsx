@@ -2,23 +2,19 @@ import { useEffect, useState } from "react";
 import { api } from "../services/api";
 
 export default function CadastroVeiculos() {
-  const [nome, setNome] = useState("");
-  const [placa, setPlaca] = useState("");
-  const [veiculos, setVeiculos] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [name, setName] = useState("");
+  const [plate, setPlate] = useState("");
+  const [editandoId, setEditandoId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [editandoId, setEditandoId] = useState(null);
 
   useEffect(() => {
-    function resize() {
-      setIsMobile(window.innerWidth <= 768);
-    }
-
+    function resize() { setIsMobile(window.innerWidth <= 768); }
     resize();
     window.addEventListener("resize", resize);
     carregarVeiculos();
-
     return () => window.removeEventListener("resize", resize);
   }, []);
 
@@ -26,64 +22,54 @@ export default function CadastroVeiculos() {
     try {
       setLoading(true);
       const res = await api.get("/vehicles/");
-      setVeiculos(res.data || []);
-    } catch {
+      setVehicles(res.data || []);
+    } catch (err) {
       alert("Erro ao carregar veículos");
     } finally {
       setLoading(false);
     }
   }
 
-  function iniciarEdicao(item) {
-    setEditandoId(item.id);
-    setNome(item.name || "");
-    setPlaca(item.plate || "");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  function cancelarEdicao() {
-    setEditandoId(null);
-    setNome("");
-    setPlaca("");
-  }
-
   async function salvarVeiculo() {
-    if (!nome.trim()) {
-      alert("Digite o nome do veículo");
+    if (!name.trim() || !plate.trim()) {
+      alert("Preencha nome e placa");
       return;
     }
 
     try {
       setSalvando(true);
-
+      const payload = { name: name.trim(), plate: plate.trim().toUpperCase() };
       if (editandoId) {
-        await api.put(`/vehicles/${editandoId}`, {
-          name: nome.trim(),
-          plate: placa.trim(),
-        });
+        await api.patch(`/vehicles/${editandoId}/`, payload);
       } else {
-        await api.post("/vehicles/", {
-          name: nome.trim(),
-          plate: placa.trim(),
-        });
+        await api.post("/vehicles/", payload);
       }
-
-      cancelarEdicao();
+      limparFormulario();
       carregarVeiculos();
-    } catch {
-      alert(editandoId ? "Erro ao editar veículo" : "Erro ao criar veículo");
+    } catch (err) {
+      alert("Erro ao salvar veículo");
     } finally {
       setSalvando(false);
     }
   }
 
-  async function excluir(id) {
-    const ok = window.confirm("Deseja excluir esse veículo?");
-    if (!ok) return;
+  function prepararEdicao(item) {
+    setEditandoId(item.id);
+    setName(item.name);
+    setPlate(item.plate);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
+  function limparFormulario() {
+    setEditandoId(null);
+    setName("");
+    setPlate("");
+  }
+
+  async function excluir(id) {
+    if (!window.confirm("Excluir este veículo?")) return;
     try {
-      await api.delete(`/vehicles/${id}`);
-      if (editandoId === id) cancelarEdicao();
+      await api.delete(`/vehicles/${id}/`);
       carregarVeiculos();
     } catch {
       alert("Erro ao excluir");
@@ -91,235 +77,55 @@ export default function CadastroVeiculos() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background:
-          "linear-gradient(180deg, #f8f7fc 0%, #fff8f2 45%, #ffffff 100%)",
-        padding: isMobile ? "18px 12px 36px" : "28px 18px 48px",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
-      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: 28,
-            padding: isMobile ? 20 : 30,
-            boxShadow: "0 18px 45px rgba(15,23,42,0.08)",
-            border: "1px solid #ece8f7",
-            marginBottom: 24,
-          }}
-        >
-          <div
-            style={{
-              display: "inline-flex",
-              padding: "8px 14px",
-              borderRadius: 999,
-              background: "#efeafd",
-              color: "#403d7c",
-              fontSize: 13,
-              fontWeight: "bold",
-              marginBottom: 18,
-            }}
-          >
-            Ferperez • Cadastro
+    <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #f8f7fc 0%, #fff8f2 100%)", padding: isMobile ? "18px 12px" : "28px 18px", fontFamily: "Arial, sans-serif" }}>
+      <div style={{ maxWidth: 900, margin: "0 auto" }}>
+        
+        <div style={{ background: "#fff", padding: isMobile ? 20 : 30, borderRadius: 28, boxShadow: "0 18px 45px rgba(15,23,42,0.08)", border: "1px solid #ece8f7", marginBottom: 24 }}>
+          <div style={{ display: "inline-flex", padding: "8px 14px", borderRadius: 999, background: editandoId ? "#fff3ea" : "#efeafd", color: editandoId ? "#ed823c" : "#403d7c", fontSize: 13, fontWeight: "bold", marginBottom: 18 }}>
+            Ferperez • Frota
           </div>
-
-          <h1 style={{ margin: 0, fontSize: isMobile ? 28 : 38, color: "#0f172a" }}>
-            {editandoId ? "Editar Veículo" : "Cadastro de Veículos"}
-          </h1>
-
-          <p style={{ marginTop: 10, color: "#64748b", fontSize: 15, lineHeight: 1.6 }}>
-            {editandoId
-              ? "Altere os dados do veículo e salve as mudanças."
-              : "Cadastre e organize os veículos utilizados nas rotas."}
-          </p>
-
-          <div
-            style={{
-              display: "flex",
-              flexDirection: isMobile ? "column" : "row",
-              gap: 12,
-              marginTop: 22,
-            }}
-          >
-            <input
-              placeholder="Nome do veículo"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              style={{
-                flex: 1,
-                padding: "16px 18px",
-                borderRadius: 16,
-                border: "1px solid #ddd6f5",
-                fontSize: 16,
-                outline: "none",
-              }}
-            />
-
-            <input
-              placeholder="Placa"
-              value={placa}
-              onChange={(e) => setPlaca(e.target.value)}
-              style={{
-                minWidth: isMobile ? "100%" : 180,
-                padding: "16px 18px",
-                borderRadius: 16,
-                border: "1px solid #ddd6f5",
-                fontSize: 16,
-                outline: "none",
-              }}
-            />
-
-            <button
-              onClick={salvarVeiculo}
-              disabled={salvando}
-              style={{
-                padding: "16px 22px",
-                borderRadius: 16,
-                border: "none",
-                background: "#403d7c",
-                color: "#fff",
-                fontWeight: "bold",
-                cursor: "pointer",
-                minWidth: isMobile ? "100%" : 150,
-              }}
-            >
-              {salvando ? "Salvando..." : editandoId ? "Salvar edição" : "Cadastrar"}
-            </button>
-
-            {editandoId && (
-              <button
-                onClick={cancelarEdicao}
-                style={{
-                  padding: "16px 22px",
-                  borderRadius: 16,
-                  border: "1px solid #ece8f7",
-                  background: "#fff",
-                  color: "#403d7c",
-                  fontWeight: "bold",
-                  cursor: "pointer",
-                  minWidth: isMobile ? "100%" : 150,
-                }}
-              >
-                Cancelar
+          <h1 style={{ margin: 0, fontSize: isMobile ? 28 : 38, color: "#0f172a" }}>{editandoId ? "Editar Veículo" : "Novo Veículo"}</h1>
+          
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 22 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
+                <input placeholder="Nome/Modelo" value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} />
+                <input placeholder="Placa" value={plate} onChange={(e) => setPlate(e.target.value)} style={inputStyle} />
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={salvarVeiculo} disabled={salvando} style={{ ...btnPrincipal, background: editandoId ? "#e0a839" : "#403d7c", flex: 1 }}>
+                {salvando ? "Salvando..." : editandoId ? "Atualizar Veículo" : "Cadastrar Veículo"}
               </button>
-            )}
+              {editandoId && <button onClick={limparFormulario} style={{ ...btnCancel, padding: "16px 24px" }}>Cancelar</button>}
+            </div>
           </div>
         </div>
 
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: 24,
-            padding: isMobile ? 18 : 24,
-            border: "1px solid #ece8f7",
-            boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
-          }}
-        >
-          <h2 style={{ marginTop: 0, color: "#0f172a", fontSize: 24 }}>
-            Veículos cadastrados
-          </h2>
-
-          {loading ? (
-            <p style={{ color: "#64748b" }}>Carregando...</p>
-          ) : veiculos.length === 0 ? (
-            <p style={{ color: "#64748b" }}>Nenhum veículo cadastrado.</p>
-          ) : (
-            <div style={{ display: "grid", gap: 12 }}>
-              {veiculos.map((item, i) => (
-                <div
-                  key={item.id}
-                  style={{
-                    background: "#faf9fd",
-                    border: "1px solid #ece8f7",
-                    borderRadius: 18,
-                    padding: 18,
-                    display: "flex",
-                    flexDirection: isMobile ? "column" : "row",
-                    justifyContent: "space-between",
-                    alignItems: isMobile ? "stretch" : "center",
-                    gap: 12,
-                  }}
-                >
+        <div style={{ background: "#fff", padding: 24, borderRadius: 24, border: "1px solid #ece8f7", boxShadow: "0 10px 30px rgba(15,23,42,0.06)" }}>
+          <h2 style={{ marginTop: 0, color: "#0f172a" }}>Frota Cadastrada</h2>
+          {loading ? <p>Carregando...</p> : (
+            <div style={{ display: "grid", gap: 10 }}>
+              {vehicles.map(item => (
+                <div key={item.id} style={itemCard}>
                   <div>
-                    <div style={{ fontSize: 13, color: "#64748b", fontWeight: "bold", marginBottom: 4 }}>
-                      Veículo #{i + 1}
-                    </div>
-
-                    <div style={{ fontSize: 22, fontWeight: "bold", color: "#0f172a", marginBottom: 6 }}>
-                      {item.name}
-                    </div>
-
-                    <div style={{ fontSize: 15, color: "#64748b" }}>
-                      Placa: <strong>{item.plate || "-"}</strong>
-                    </div>
+                    <strong style={{ fontSize: 18, color: "#403d7c" }}>{item.name}</strong>
+                    <div style={{ fontSize: 14, color: "#ed823c", fontWeight: "bold" }}>{item.plate}</div>
                   </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: isMobile ? "column" : "row",
-                      gap: 10,
-                    }}
-                  >
-                    <button
-                      onClick={() => iniciarEdicao(item)}
-                      style={{
-                        padding: "12px 16px",
-                        borderRadius: 14,
-                        border: "none",
-                        background: "#403d7c",
-                        color: "#fff",
-                        fontWeight: "bold",
-                        cursor: "pointer",
-                        minWidth: isMobile ? "100%" : 120,
-                      }}
-                    >
-                      Editar
-                    </button>
-
-                    <button
-                      onClick={() => excluir(item.id)}
-                      style={{
-                        padding: "12px 16px",
-                        borderRadius: 14,
-                        border: "none",
-                        background: "#ed823c",
-                        color: "#fff",
-                        fontWeight: "bold",
-                        cursor: "pointer",
-                        minWidth: isMobile ? "100%" : 120,
-                      }}
-                    >
-                      Excluir
-                    </button>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={() => prepararEdicao(item)} style={btnAcao}>Editar</button>
+                    <button onClick={() => excluir(item.id)} style={{ ...btnAcao, background: "#fff0f0", color: "#e11d48" }}>Excluir</button>
                   </div>
                 </div>
               ))}
             </div>
           )}
-
-          <a href="/dashboard" style={{ textDecoration: "none" }}>
-            <button
-              style={{
-                marginTop: 18,
-                width: isMobile ? "100%" : "auto",
-                padding: "14px 18px",
-                borderRadius: 14,
-                border: "1px solid #ece8f7",
-                background: "#fff",
-                color: "#403d7c",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              Voltar ao painel
-            </button>
-          </a>
         </div>
       </div>
     </div>
   );
 }
+
+const inputStyle = { padding: "16px", borderRadius: 14, border: "1px solid #ddd6f5", fontSize: 16, outline: "none" };
+const btnPrincipal = { padding: "16px", borderRadius: 14, border: "none", color: "#fff", fontWeight: "bold", cursor: "pointer" };
+const btnCancel = { borderRadius: 14, border: "1px solid #e2e8f0", background: "#fff", color: "#64748b", cursor: "pointer", fontWeight: "bold" };
+const itemCard = { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", background: "#faf9fd", borderRadius: 18, border: "1px solid #ece8f7" };
+const btnAcao = { padding: "10px 16px", borderRadius: 12, border: "none", background: "#efeafd", color: "#403d7c", fontWeight: "bold", cursor: "pointer", fontSize: 13 };
