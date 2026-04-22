@@ -11,7 +11,6 @@ export default function VinculoRotas() {
   const [routeId, setRouteId] = useState("");
   const [vehicleId, setVehicleId] = useState("");
   const [cityInput, setCityInput] = useState(""); 
-  const [neighborhood, setNeighborhood] = useState("");
   const [weekday, setWeekday] = useState("");
 
   const [editandoId, setEditandoId] = useState(null);
@@ -67,11 +66,9 @@ export default function VinculoRotas() {
       alert("Por favor, preencha Rota, Veículo, Cidade e Dia.");
       return;
     }
-
     try {
       setSalvando(true);
       const cityId = await obterOuCriarCidade(cityInput);
-
       const payload = {
         route_id: Number(routeId),
         vehicle_id: Number(vehicleId),
@@ -84,7 +81,6 @@ export default function VinculoRotas() {
       } else {
         await api.post("/route-city-day/", payload);
       }
-
       limparFormulario();
       carregarDadosIniciais();
       alert("Vínculo salvo com sucesso!");
@@ -99,7 +95,7 @@ export default function VinculoRotas() {
     setEditandoId(item.id);
     setRouteId(item.route_id);
     setVehicleId(item.vehicle_id);
-    setCityInput(item.city_name || ""); 
+    setCityInput(item.city?.name || ""); 
     setWeekday(item.weekday);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -109,7 +105,6 @@ export default function VinculoRotas() {
     setRouteId("");
     setVehicleId("");
     setCityInput("");
-    setNeighborhood("");
     setWeekday("");
   }
 
@@ -127,44 +122,59 @@ export default function VinculoRotas() {
         <button onClick={() => window.location.href = "/dashboard"} style={btnCancel}>← Menu Principal</button>
         
         <div style={{ background: "#fff", padding: 30, borderRadius: 24, boxShadow: "0 10px 30px rgba(0,0,0,0.05)", marginBottom: 25, marginTop: 20 }}>
-          <h1 style={{ color: "#403d7c", fontSize: 24 }}>Vínculo de Atendimento</h1>
+          <h1 style={{ color: "#403d7c", fontSize: 24 }}>Vínculo de Atendimento Logístico</h1>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20, marginTop: 20 }}>
-            <input list="lista-cidades" value={cityInput} onChange={e => setCityInput(e.target.value)} placeholder="Cidade" style={inputStyle} />
-            <datalist id="lista-cidades">{cidadesSP.map((c, i) => <option key={i} value={c} />)}</datalist>
             
-            <select value={routeId} onChange={e => setRouteId(e.target.value)} style={inputStyle}>
-              <option value="">Selecione a Rota...</option>
-              {routes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-            </select>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                <label style={{ fontSize: 12, fontWeight: "bold", color: "#64748b" }}>Cidade</label>
+                <input list="lista-cidades" value={cityInput} onChange={e => setCityInput(e.target.value)} placeholder="Digite a cidade..." style={inputStyle} />
+                <datalist id="lista-cidades">{cidadesSP.map((c, i) => <option key={i} value={c} />)}</datalist>
+            </div>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                <label style={{ fontSize: 12, fontWeight: "bold", color: "#64748b" }}>Rota</label>
+                <select value={routeId} onChange={e => setRouteId(e.target.value)} style={inputStyle}>
+                  <option value="">Selecione a Rota...</option>
+                  {routes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                </select>
+            </div>
 
-            <select value={vehicleId} onChange={e => setVehicleId(e.target.value)} style={inputStyle}>
-              <option value="">Selecione o Veículo...</option>
-              {vehicles.map(v => <option key={v.id} value={v.id}>{v.name} ({v.plate})</option>)}
-            </select>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                <label style={{ fontSize: 12, fontWeight: "bold", color: "#64748b" }}>Veículo</label>
+                <select value={vehicleId} onChange={e => setVehicleId(e.target.value)} style={inputStyle}>
+                  <option value="">Selecione o Veículo...</option>
+                  {vehicles.map(v => <option key={v.id} value={v.id}>{v.name} ({v.plate})</option>)}
+                </select>
+            </div>
 
-            <select value={weekday} onChange={e => setWeekday(e.target.value)} style={inputStyle}>
-              <option value="">Dia da Semana...</option>
-              <option value="0">Segunda-feira</option>
-              <option value="1">Terça-feira</option>
-              <option value="2">Quarta-feira</option>
-              <option value="3">Quinta-feira</option>
-              <option value="4">Sexta-feira</option>
-              <option value="7">Todos os dias</option>
-            </select>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                <label style={{ fontSize: 12, fontWeight: "bold", color: "#64748b" }}>Dia da Semana</label>
+                <select value={weekday} onChange={e => setWeekday(e.target.value)} style={inputStyle}>
+                  <option value="">Selecione o dia...</option>
+                  <option value="0">Segunda-feira</option>
+                  <option value="1">Terça-feira</option>
+                  <option value="2">Quarta-feira</option>
+                  <option value="3">Quinta-feira</option>
+                  <option value="4">Sexta-feira</option>
+                  <option value="7">Todos os dias</option>
+                </select>
+            </div>
           </div>
-          <button onClick={salvarVinculo} disabled={salvando} style={btnPrincipal}>{salvando ? "Salvando..." : "Salvar Vínculo"}</button>
+          <button onClick={salvarVinculo} disabled={salvando} style={btnPrincipal}>
+            {salvando ? "Salvando..." : editandoId ? "Atualizar Vínculo" : "Salvar Vínculo"}
+          </button>
         </div>
 
         <div style={{ display: "grid", gap: 12 }}>
           {vinculos.map(v => (
             <div key={v.id} style={cardStyle}>
               <div>
-                <b style={{ color: "#ed823c" }}>{v.route?.name || "Sem Rota"}</b>
-                <div style={{ fontSize: 18, fontWeight: "bold" }}>{v.city?.name}</div>
+                <b style={{ color: "#ed823c", fontSize: 12 }}>{v.route?.name || "Rota Não Definida"}</b>
+                <div style={{ fontSize: 18, fontWeight: "bold", color: "#403d7c" }}>{v.city?.name}</div>
               </div>
               <div style={{ display: "flex", gap: 10 }}>
                 <button onClick={() => prepararEdicao(v)} style={btnAcao}>Editar</button>
-                <button onClick={() => excluir(v.id)} style={{...btnAcao, color: "red"}}>Excluir</button>
+                <button onClick={() => excluir(v.id)} style={{...btnAcao, color: "#ef4444", background: "#fee2e2"}}>Excluir</button>
               </div>
             </div>
           ))}
@@ -174,8 +184,8 @@ export default function VinculoRotas() {
   );
 }
 
-const inputStyle = { padding: "12px", borderRadius: 12, border: "1px solid #ddd" };
+const inputStyle = { padding: "12px", borderRadius: 12, border: "1px solid #ddd", fontSize: 15 };
 const btnPrincipal = { width: "100%", marginTop: 20, padding: "15px", borderRadius: 12, background: "#403d7c", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" };
-const btnCancel = { padding: "10px 20px", borderRadius: 12, border: "1px solid #ddd", background: "#fff", cursor: "pointer" };
-const cardStyle = { background: "#fff", padding: 20, borderRadius: 18, display: "flex", justifyContent: "space-between", alignItems: "center" };
-const btnAcao = { padding: "8px 12px", borderRadius: 8, border: "none", cursor: "pointer", fontWeight: "bold" };
+const btnCancel = { padding: "10px 20px", borderRadius: 12, border: "1px solid #ddd", background: "#fff", cursor: "pointer", fontWeight: "bold", color: "#403d7c" };
+const cardStyle = { background: "#fff", padding: "20px", borderRadius: 18, display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 4px 10px rgba(0,0,0,0.02)" };
+const btnAcao = { padding: "8px 12px", borderRadius: 8, border: "none", cursor: "pointer", fontWeight: "bold", fontSize: 13, background: "#f1f5f9", color: "#403d7c" };
