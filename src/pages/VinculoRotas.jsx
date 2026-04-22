@@ -10,16 +10,13 @@ export default function VinculoRotas() {
   const [routeId, setRouteId] = useState("");
   const [vehicleId, setVehicleId] = useState("");
   const [cityId, setCityId] = useState(""); 
-  const [neighborhood, setNeighborhood] = useState(""); // Campo de texto
+  const [neighborhood, setNeighborhood] = useState("");
   const [weekday, setWeekday] = useState("");
 
-  useEffect(() => {
-    carregarDados();
-  }, []);
+  useEffect(() => { carregarDados(); }, []);
 
   async function carregarDados() {
     try {
-      // ATENÇÃO: Removido o '/neighborhoods/' que dava erro 404
       const [resC, resR, resV, resVi] = await Promise.all([
         api.get("/cities/"),
         api.get("/routes/"),
@@ -30,10 +27,7 @@ export default function VinculoRotas() {
       setRoutes(resR.data || []);
       setVehicles(resV.data || []);
       setVinculos(resVi.data || []);
-    } catch (err) {
-      console.error("Erro ao carregar dados:", err);
-      alert("Erro ao carregar dados. Verifique o console.");
-    }
+    } catch (err) { console.error("Erro ao carregar:", err); }
   }
 
   async function salvar() {
@@ -44,48 +38,46 @@ export default function VinculoRotas() {
         vehicle_id: vehicleId ? Number(vehicleId) : null,
         city_id: Number(cityId),
         weekday: Number(weekday),
-        neighborhood_name: neighborhood // Salva como texto
+        neighborhood_name: neighborhood
       });
-      alert("Vínculo criado!");
-      setNeighborhood("");
-      carregarDados();
+      alert("Salvo com sucesso!");
+      setNeighborhood(""); carregarDados();
     } catch (err) { alert("Erro ao salvar"); }
   }
 
   return (
-    <div style={{ padding: 40, background: "#f8f7fc", minHeight: "100vh" }}>
-      <div style={{ maxWidth: 900, margin: "0 auto", background: "#fff", padding: 30, borderRadius: 20 }}>
-        <h2>Vínculo de Rotas</h2>
+    <div style={{ padding: 30, maxWidth: 1000, margin: "0 auto", fontFamily: "Arial" }}>
+      <button onClick={() => window.location.href="/dashboard"} style={{ marginBottom: 20 }}>← Voltar</button>
+      <div style={{ background: "#fff", padding: 25, borderRadius: 15, boxShadow: "0 5px 15px rgba(0,0,0,0.1)" }}>
+        <h2>Novo Vínculo de Atendimento</h2>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
-          <select value={routeId} onChange={e => setRouteId(e.target.value)} style={inputStyle}>
-            <option value="">Selecione a rota</option>
+          <select value={routeId} onChange={e => setRouteId(e.target.value)} style={inputS}>
+            <option value="">Selecione a Rota</option>
             {routes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
-
-          <select value={cityId} onChange={e => setCityId(e.target.value)} style={inputStyle}>
-            <option value="">Selecione a cidade</option>
+          <select value={cityId} onChange={e => setCityId(e.target.value)} style={inputS}>
+            <option value="">Selecione a Cidade</option>
             {cities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
-
-          <input 
-            placeholder="Bairro (Digite o nome)" 
-            value={neighborhood} 
-            onChange={e => setNeighborhood(e.target.value)} 
-            style={inputStyle} 
-          />
-
-          <select value={weekday} onChange={e => setWeekday(e.target.value)} style={inputStyle}>
-            <option value="">Dia da Semana</option>
+          <input placeholder="Bairro (Texto)" value={neighborhood} onChange={e => setNeighborhood(e.target.value)} style={inputS} />
+          <select value={weekday} onChange={e => setWeekday(e.target.value)} style={inputS}>
             <option value="0">Segunda</option><option value="1">Terça</option>
             <option value="2">Quarta</option><option value="3">Quinta</option>
             <option value="4">Sexta</option><option value="7">Todos os dias</option>
           </select>
         </div>
-        <button onClick={salvar} style={btnStyle}>Criar Vínculo</button>
+        <button onClick={salvar} style={btnS}>Salvar Atendimento</button>
+      </div>
+      <div style={{ marginTop: 20 }}>
+        {vinculos.map(v => (
+          <div key={v.id} style={{ background: "#fff", padding: 15, borderRadius: 10, marginBottom: 10, display: "flex", justifyContent: "space-between" }}>
+            <span><b>{v.city_name}</b> - {v.route_name} ({v.neighborhood_name || "Geral"})</span>
+            <button onClick={async () => { await api.delete(`/route-city-day/${v.id}/`); carregarDados(); }} style={{ color: "red", border: "none", background: "none", cursor: "pointer" }}>Excluir</button>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
-
-const inputStyle = { padding: 12, borderRadius: 10, border: "1px solid #ddd" };
-const btnStyle = { marginTop: 20, width: "100%", padding: 15, background: "#403d7c", color: "#fff", border: "none", borderRadius: 10, cursor: "pointer" };
+const inputS = { padding: 12, borderRadius: 8, border: "1px solid #ddd" };
+const btnS = { width: "100%", marginTop: 15, padding: 15, background: "#403d7c", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer" };
