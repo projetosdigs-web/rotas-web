@@ -8,9 +8,11 @@ export default function VinculoRotas() {
   const [vinculos, setVinculos] = useState([]);
   const [cidadesSP, setCidadesSP] = useState([]); 
   
+  // Estados do formulário
   const [routeId, setRouteId] = useState("");
   const [vehicleId, setVehicleId] = useState("");
   const [cityInput, setCityInput] = useState(""); 
+  const [neighborhood, setNeighborhood] = useState(""); // Novo campo para Bairro
   const [weekday, setWeekday] = useState("");
 
   const [editandoId, setEditandoId] = useState(null);
@@ -36,14 +38,18 @@ export default function VinculoRotas() {
   async function carregarDadosIniciais() {
     try {
       setLoading(true);
+      // Buscamos as rotas, veículos e os vínculos atuais
       const [r, v, vi] = await Promise.all([
         api.get("/routes/"),
         api.get("/vehicles/"),
         api.get("/route-city-day/"), 
       ]);
+      
       setRoutes(r.data || []);
       setVehicles(v.data || []);
       setVinculos(vi.data || []);
+      
+      console.log("Dados carregados:", { rotas: r.data, veiculos: v.data });
     } catch (err) {
       console.error("Erro ao carregar dados", err);
     } finally {
@@ -66,13 +72,16 @@ export default function VinculoRotas() {
       alert("Por favor, preencha Rota, Veículo, Cidade e Dia.");
       return;
     }
+
     try {
       setSalvando(true);
       const cityId = await obterOuCriarCidade(cityInput);
+
       const payload = {
         route_id: Number(routeId),
         vehicle_id: Number(vehicleId),
         city_id: cityId,
+        neighborhood_name: neighborhood.trim(), // Enviando o bairro
         weekday: Number(weekday),
       };
 
@@ -81,6 +90,7 @@ export default function VinculoRotas() {
       } else {
         await api.post("/route-city-day/", payload);
       }
+
       limparFormulario();
       carregarDadosIniciais();
       alert("Vínculo salvo com sucesso!");
@@ -95,7 +105,8 @@ export default function VinculoRotas() {
     setEditandoId(item.id);
     setRouteId(item.route_id);
     setVehicleId(item.vehicle_id);
-    setCityInput(item.city?.name || ""); 
+    setCityInput(item.city_name || item.city?.name || ""); 
+    setNeighborhood(item.neighborhood_name || "");
     setWeekday(item.weekday);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -105,6 +116,7 @@ export default function VinculoRotas() {
     setRouteId("");
     setVehicleId("");
     setCityInput("");
+    setNeighborhood("");
     setWeekday("");
   }
 
@@ -122,55 +134,65 @@ export default function VinculoRotas() {
         <button onClick={() => window.location.href = "/dashboard"} style={btnCancel}>← Menu Principal</button>
         
         <div style={{ background: "#fff", padding: 30, borderRadius: 24, boxShadow: "0 10px 30px rgba(0,0,0,0.05)", marginBottom: 25, marginTop: 20 }}>
-          <h1 style={{ color: "#403d7c", fontSize: 24 }}>Vínculo de Atendimento Logístico</h1>
+          <h1 style={{ color: "#403d7c", fontSize: 24 }}>Novo Atendimento Logístico</h1>
+          
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20, marginTop: 20 }}>
             
-            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                <label style={{ fontSize: 12, fontWeight: "bold", color: "#64748b" }}>Cidade</label>
-                <input list="lista-cidades" value={cityInput} onChange={e => setCityInput(e.target.value)} placeholder="Digite a cidade..." style={inputStyle} />
-                <datalist id="lista-cidades">{cidadesSP.map((c, i) => <option key={i} value={c} />)}</datalist>
+            <div style={inputGroup}>
+              <label style={labelStyle}>Cidade (Busca SP)</label>
+              <input list="lista-cidades" value={cityInput} onChange={e => setCityInput(e.target.value)} placeholder="Ex: Jundiaí" style={inputStyle} />
+              <datalist id="lista-cidades">{cidadesSP.map((c, i) => <option key={i} value={c} />)}</datalist>
+            </div>
+
+            <div style={inputGroup}>
+              <label style={labelStyle}>Bairro ou Região</label>
+              <input value={neighborhood} onChange={e => setNeighborhood(e.target.value)} placeholder="Ex: Centro ou Todos" style={inputStyle} />
             </div>
             
-            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                <label style={{ fontSize: 12, fontWeight: "bold", color: "#64748b" }}>Rota</label>
-                <select value={routeId} onChange={e => setRouteId(e.target.value)} style={inputStyle}>
-                  <option value="">Selecione a Rota...</option>
-                  {routes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-                </select>
+            <div style={inputGroup}>
+              <label style={labelStyle}>Rota</label>
+              <select value={routeId} onChange={e => setRouteId(e.target.value)} style={inputStyle}>
+                <option value="">Selecione a Rota...</option>
+                {routes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </select>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                <label style={{ fontSize: 12, fontWeight: "bold", color: "#64748b" }}>Veículo</label>
-                <select value={vehicleId} onChange={e => setVehicleId(e.target.value)} style={inputStyle}>
-                  <option value="">Selecione o Veículo...</option>
-                  {vehicles.map(v => <option key={v.id} value={v.id}>{v.name} ({v.plate})</option>)}
-                </select>
+            <div style={inputGroup}>
+              <label style={labelStyle}>Veículo</label>
+              <select value={vehicleId} onChange={e => setVehicleId(e.target.value)} style={inputStyle}>
+                <option value="">Selecione o Veículo...</option>
+                {vehicles.map(v => <option key={v.id} value={v.id}>{v.name} ({v.plate})</option>)}
+              </select>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                <label style={{ fontSize: 12, fontWeight: "bold", color: "#64748b" }}>Dia da Semana</label>
-                <select value={weekday} onChange={e => setWeekday(e.target.value)} style={inputStyle}>
-                  <option value="">Selecione o dia...</option>
-                  <option value="0">Segunda-feira</option>
-                  <option value="1">Terça-feira</option>
-                  <option value="2">Quarta-feira</option>
-                  <option value="3">Quinta-feira</option>
-                  <option value="4">Sexta-feira</option>
-                  <option value="7">Todos os dias</option>
-                </select>
+            <div style={inputGroup}>
+              <label style={labelStyle}>Dia da Semana</label>
+              <select value={weekday} onChange={e => setWeekday(e.target.value)} style={inputStyle}>
+                <option value="">Selecione...</option>
+                <option value="0">Segunda-feira</option>
+                <option value="1">Terça-feira</option>
+                <option value="2">Quarta-feira</option>
+                <option value="3">Quinta-feira</option>
+                <option value="4">Sexta-feira</option>
+                <option value="7">Todos os dias</option>
+              </select>
             </div>
           </div>
+
           <button onClick={salvarVinculo} disabled={salvando} style={btnPrincipal}>
-            {salvando ? "Salvando..." : editandoId ? "Atualizar Vínculo" : "Salvar Vínculo"}
+            {salvando ? "Salvando..." : editandoId ? "Atualizar" : "Salvar Vínculo"}
           </button>
+          {editandoId && <button onClick={limparFormulario} style={{...btnCancel, width: '100%', marginTop: 10}}>Cancelar Edição</button>}
         </div>
 
+        {/* LISTA DE VÍNCULOS */}
         <div style={{ display: "grid", gap: 12 }}>
           {vinculos.map(v => (
             <div key={v.id} style={cardStyle}>
-              <div>
-                <b style={{ color: "#ed823c", fontSize: 12 }}>{v.route?.name || "Rota Não Definida"}</b>
-                <div style={{ fontSize: 18, fontWeight: "bold", color: "#403d7c" }}>{v.city?.name}</div>
+              <div style={{ borderLeft: "4px solid #403d7c", paddingLeft: 12 }}>
+                <div style={{ fontSize: 12, color: "#ed823c", fontWeight: "bold" }}>{v.route_name || v.route?.name}</div>
+                <div style={{ fontSize: 18, fontWeight: "bold", color: "#403d7c" }}>{v.city_name || v.city?.name}</div>
+                <div style={{ fontSize: 14, color: "#64748b" }}>{v.neighborhood_name || "Geral"}</div>
               </div>
               <div style={{ display: "flex", gap: 10 }}>
                 <button onClick={() => prepararEdicao(v)} style={btnAcao}>Editar</button>
@@ -184,6 +206,9 @@ export default function VinculoRotas() {
   );
 }
 
+// Estilos
+const inputGroup = { display: "flex", flexDirection: "column", gap: 5 };
+const labelStyle = { fontSize: 12, fontWeight: "bold", color: "#64748b", marginLeft: 5 };
 const inputStyle = { padding: "12px", borderRadius: 12, border: "1px solid #ddd", fontSize: 15 };
 const btnPrincipal = { width: "100%", marginTop: 20, padding: "15px", borderRadius: 12, background: "#403d7c", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" };
 const btnCancel = { padding: "10px 20px", borderRadius: 12, border: "1px solid #ddd", background: "#fff", cursor: "pointer", fontWeight: "bold", color: "#403d7c" };
