@@ -16,7 +16,21 @@ export default function ConsultaCidade() {
     return () => window.removeEventListener("resize", resize);
   }, []);
 
-  // Carrega as 645 cidades de SP para sugerir na busca
+  // Mapeamento dos dias para exibição amigável
+  const getWeekdayName = (day) => {
+    const dias = {
+      0: "Segunda-feira",
+      1: "Terça-feira",
+      2: "Quarta-feira",
+      3: "Quinta-feira",
+      4: "Sexta-feira",
+      5: "Sábado",
+      6: "Domingo",
+      7: "Todos os dias"
+    };
+    return dias[day] || "Não definido";
+  };
+
   async function carregarCidadesIBGE() {
     try {
       const res = await axios.get("https://servicodados.ibge.gov.br/api/v1/localidades/estados/35/municipios");
@@ -33,10 +47,15 @@ export default function ConsultaCidade() {
     
     setLoading(true);
     try {
-      const res = await api.get(`/route-neighborhoods/search/?q=${query}`);
-      setResultados(res.data || []);
+      // CORREÇÃO 1: Rota alterada para /lookup-city/
+      // CORREÇÃO 2: Parâmetro alterado de 'q' para 'query'
+      const res = await api.get(`/lookup-city/?query=${query}`);
+      
+      // CORREÇÃO 3: O backend retorna um objeto { routes: [...] }
+      setResultados(res.data.routes || []);
     } catch (err) {
       console.error("Erro na busca:", err);
+      setResultados([]); // Limpa se der 404
     } finally {
       setLoading(false);
     }
@@ -74,17 +93,19 @@ export default function ConsultaCidade() {
         {/* Lista de Resultados */}
         <div style={{ marginTop: 35, paddingBottom: 60 }}>
           {resultados.length > 0 ? (
-            resultados.map((r) => (
-              <div key={r.id} style={{ background: "#fff", padding: 22, borderRadius: 20, marginBottom: 15, border: "1px solid #ece8f7", boxShadow: "0 4px 15px rgba(0,0,0,0.03)" }}>
+            resultados.map((r, index) => (
+              <div key={index} style={{ background: "#fff", padding: 22, borderRadius: 20, marginBottom: 15, border: "1px solid #ece8f7", boxShadow: "0 4px 15px rgba(0,0,0,0.03)" }}>
                 <div style={{ color: "#ed823c", fontWeight: "bold", fontSize: 14, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>{r.route_name}</div>
-                <div style={{ fontSize: 20, fontWeight: "bold", color: "#403d7c" }}>{r.city_name}</div>
+                <div style={{ fontSize: 20, fontWeight: "bold", color: "#403d7c" }}>{query}</div>
                 <div style={{ color: "#64748b", fontSize: 16, marginTop: 2 }}>{r.neighborhood_name || "Atendimento Geral"}</div>
                 
                 <div style={{ marginTop: 18, paddingTop: 18, borderTop: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ background: "#efeafd", color: "#403d7c", padding: "6px 14px", borderRadius: 10, fontSize: 14, fontWeight: "bold" }}>
-                    🗓️ {r.weekday_str}
+                    🗓️ {getWeekdayName(r.weekday)}
                   </div>
-                  <div style={{ color: "#64748b", fontSize: 14, fontWeight: "500" }}>🚛 {r.vehicle_name}</div>
+                  <div style={{ color: "#64748b", fontSize: 14, fontWeight: "500" }}>
+                    🚛 {r.vehicle_name || "Frota Geral"} {r.vehicle_plate ? `(${r.vehicle_plate})` : ""}
+                  </div>
                 </div>
               </div>
             ))
@@ -92,6 +113,7 @@ export default function ConsultaCidade() {
             <div style={{ textAlign: "center", color: "#64748b", marginTop: 50, background: "#fff", padding: 30, borderRadius: 20 }}>
               <span style={{ fontSize: 40 }}>📍</span>
               <p style={{ marginTop: 10 }}>Nenhuma rota encontrada para <strong>"{query}"</strong>.</p>
+              <small>Verifique se a cidade está vinculada a uma rota no painel admin.</small>
             </div>
           ) : (
             <div style={{ textAlign: "center", color: "#a0aec0", marginTop: 40, fontSize: 14 }}>
