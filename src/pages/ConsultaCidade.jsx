@@ -49,7 +49,7 @@ export default function ConsultaCidade() {
     try {
       // CORREÇÃO 1: Rota alterada para /lookup-city/
       // CORREÇÃO 2: Parâmetro alterado de 'q' para 'query'
-      const res = await api.get(`/lookup-city/?query=${query}`);
+      const res = await api.get(`/lookup-city?query=${query}`);
       
       // CORREÇÃO 3: O backend retorna um objeto { routes: [...] }
       setResultados(res.data.routes || []);
