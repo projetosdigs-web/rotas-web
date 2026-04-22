@@ -12,7 +12,6 @@ export default function Login() {
     function handleResize() {
       setIsMobile(window.innerWidth <= 768);
     }
-
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -27,26 +26,31 @@ export default function Login() {
     try {
       setLoading(true);
 
-      const res = await api.post("/auth/login", {
+      // CORREÇÃO: Adicionamos a barra '/' no final para evitar o erro 404 do servidor
+      const res = await api.post("/auth/login/", {
         username,
         password,
       });
 
       localStorage.setItem("token", res.data.access_token);
+      
+      // Sucesso! Redireciona para o painel
       window.location.href = "/dashboard";
     } catch (err) {
-      alert("Usuário ou senha inválidos");
+      console.error("Erro no login:", err);
+      // Se o erro for 400 ou 401, as credenciais estão erradas ou o admin não foi criado
+      alert("Usuário ou senha inválidos. Verifique se o backend está atualizado.");
     } finally {
       setLoading(false);
     }
   }
 
+  // ... (mantenha o restante do seu código de estilização e return igual)
   return (
     <div
       style={{
         minHeight: "100vh",
-        background:
-          "linear-gradient(135deg, #403d7c 0%, #2f2d5d 45%, #ed823c 100%)",
+        background: "linear-gradient(135deg, #403d7c 0%, #2f2d5d 45%, #ed823c 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -64,6 +68,7 @@ export default function Login() {
           alignItems: "stretch",
         }}
       >
+        {/* Lado Esquerdo - Info */}
         <div
           style={{
             background: "rgba(255,255,255,0.10)",
@@ -163,6 +168,7 @@ export default function Login() {
           </div>
         </div>
 
+        {/* Lado Direito - Form de Login */}
         <div
           style={{
             background: "#ffffff",
@@ -202,8 +208,7 @@ export default function Login() {
               fontSize: 15,
             }}
           >
-            Informe suas credenciais para acessar o painel administrativo da
-            Ferperez RotaCerta.
+            Informe suas credenciais para acessar o painel administrativo.
           </p>
 
           <div style={{ marginTop: 26 }}>
@@ -244,6 +249,7 @@ export default function Login() {
               />
 
               <button
+                type="button"
                 onClick={() => setMostrarSenha(!mostrarSenha)}
                 style={{
                   position: "absolute",
@@ -284,6 +290,7 @@ export default function Login() {
 
             <a href="/consulta" style={{ textDecoration: "none" }}>
               <button
+                type="button"
                 style={{
                   width: "100%",
                   marginTop: 12,
