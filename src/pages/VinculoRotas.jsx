@@ -8,167 +8,137 @@ export default function VinculoRotas() {
   const [vinculos, setVinculos] = useState([]);
   const [cidadesSP, setCidadesSP] = useState([]); 
   
-  // Estados do formulário
   const [routeId, setRouteId] = useState("");
   const [vehicleId, setVehicleId] = useState("");
   const [cityInput, setCityInput] = useState(""); 
-  const [neighborhood, setNeighborhood] = useState(""); // Novo campo para Bairro
+  const [neighborhood, setNeighborhood] = useState("");
   const [weekday, setWeekday] = useState("");
 
-  const [editandoId, setEditandoId] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [salvando, setSalvando] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
     carregarDadosIniciais();
-    carregarCidadesIBGE();
+    
+    // Carrega cidades do IBGE para o auxílio na digitação
+    axios.get("https://servicodados.ibge.gov.br/api/v1/localidades/estados/35/municipios")
+      .then(res => setCidadesSP(res.data.map(c => c.nome).sort()))
+      .catch(err => console.error("Erro IBGE:", err));
+
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  async function carregarCidadesIBGE() {
-    try {
-      const res = await axios.get("https://servicodados.ibge.gov.br/api/v1/localidades/estados/35/municipios");
-      setCidadesSP(res.data.map(c => c.nome).sort());
-    } catch (err) { console.error("Erro IBGE", err); }
-  }
-
   async function carregarDadosIniciais() {
+    setLoading(true);
     try {
-      setLoading(true);
-      // Buscamos as rotas, veículos e os vínculos atuais
-      const [r, v, vi] = await Promise.all([
-        api.get("/routes/"),
-        api.get("/vehicles/"),
-        api.get("/route-city-day/"), 
-      ]);
+      console.log("Tentando buscar dados do backend...");
       
-      setRoutes(r.data || []);
-      setVehicles(v.data || []);
-      setVinculos(vi.data || []);
-      
-      console.log("Dados carregados:", { rotas: r.data, veiculos: v.data });
+      // Buscamos cada um individualmente para não travar se um falhar
+      const resRoutes = await api.get("/routes/");
+      setRoutes(resRoutes.data || []);
+
+      const resVehicles = await api.get("/vehicles/");
+      setVehicles(resVehicles.data || []);
+
+      const resVinculos = await api.get("/route-city-day/");
+      setVinculos(resVinculos.data || []);
+
+      console.log("Dados carregados com sucesso!");
     } catch (err) {
-      console.error("Erro ao carregar dados", err);
+      console.error("Erro crítico ao carregar dados:", err.response || err);
+      alert("Erro ao conectar com o servidor. Verifique se o backend está rodando.");
     } finally {
       setLoading(false);
     }
   }
 
-  async function obterOuCriarCidade(nomeCidade) {
-    const resCidades = await api.get("/cities/");
-    const cidadeExistente = resCidades.data.find(
-      c => c.name.trim().toLowerCase() === nomeCidade.trim().toLowerCase()
-    );
-    if (cidadeExistente) return cidadeExistente.id;
-    const novaCidade = await api.post("/cities/", { name: nomeCidade.trim() });
-    return novaCidade.data.id;
-  }
-
-  async function salvarVinculo() {
-    if (!routeId || !vehicleId || !cityInput || !weekday) {
-      alert("Por favor, preencha Rota, Veículo, Cidade e Dia.");
-      return;
+  async function salvar() {
+    if (!routeId || !cityInput || !weekday) {
+      return alert("Preencha Cidade, Rota e Dia da Semana!");
     }
-
+    
     try {
-      setSalvando(true);
-      const cityId = await obterOuCriarCidade(cityInput);
+      setLoading(true);
+      // 1. Verificar/Criar Cidade
+      const resC = await api.get("/cities/");
+      let city = resC.data.find(c => c.name.toLowerCase() === cityInput.toLowerCase());
+      let cityId = city ? city.id : null;
 
-      const payload = {
-        route_id: Number(routeId),
-        vehicle_id: Number(vehicleId),
-        city_id: cityId,
-        neighborhood_name: neighborhood.trim(), // Enviando o bairro
-        weekday: Number(weekday),
-      };
-
-      if (editandoId) {
-        await api.patch(`/route-city-day/${editandoId}/`, payload);
-      } else {
-        await api.post("/route-city-day/", payload);
+      if (!cityId) {
+        const novaC = await api.post("/cities/", { name: cityInput });
+        cityId = novaC.data.id;
       }
 
-      limparFormulario();
+      // 2. Criar Vínculo
+      await api.post("/route-city-day/", {
+        route_id: Number(routeId),
+        vehicle_id: vehicleId ? Number(vehicleId) : null,
+        city_id: Number(cityId),
+        weekday: Number(weekday),
+        neighborhood_name: neighborhood
+      });
+
+      alert("Vínculo criado com sucesso!");
+      setCityInput("");
+      setNeighborhood("");
       carregarDadosIniciais();
-      alert("Vínculo salvo com sucesso!");
     } catch (err) {
+      console.error("Erro ao salvar:", err);
       alert("Erro ao salvar vínculo.");
     } finally {
-      setSalvando(false);
+      setLoading(false);
     }
   }
 
-  function prepararEdicao(item) {
-    setEditandoId(item.id);
-    setRouteId(item.route_id);
-    setVehicleId(item.vehicle_id);
-    setCityInput(item.city_name || item.city?.name || ""); 
-    setNeighborhood(item.neighborhood_name || "");
-    setWeekday(item.weekday);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  function limparFormulario() {
-    setEditandoId(null);
-    setRouteId("");
-    setVehicleId("");
-    setCityInput("");
-    setNeighborhood("");
-    setWeekday("");
-  }
-
-  async function excluir(id) {
-    if (!window.confirm("Deseja excluir?")) return;
-    try {
-      await api.delete(`/route-city-day/${id}/`);
-      carregarDadosIniciais();
-    } catch { alert("Erro ao excluir"); }
-  }
+  // Estilos rápidos internos
+  const cardStyle = { background: "#fff", padding: 25, borderRadius: 20, boxShadow: "0 10px 30px rgba(0,0,0,0.05)", marginBottom: 20 };
+  const inputStyle = { padding: "12px", borderRadius: 12, border: "1px solid #ddd", fontSize: 15, width: "100%", boxSizing: "border-box" };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8f7fc", padding: isMobile ? "15px" : "30px", fontFamily: "Arial" }}>
-      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-        <button onClick={() => window.location.href = "/dashboard"} style={btnCancel}>← Menu Principal</button>
+    <div style={{ minHeight: "100vh", background: "#f8f7fc", padding: isMobile ? "15px" : "40px", fontFamily: "Arial" }}>
+      <div style={{ maxWidth: 800, margin: "0 auto" }}>
         
-        <div style={{ background: "#fff", padding: 30, borderRadius: 24, boxShadow: "0 10px 30px rgba(0,0,0,0.05)", marginBottom: 25, marginTop: 20 }}>
-          <h1 style={{ color: "#403d7c", fontSize: 24 }}>Novo Atendimento Logístico</h1>
+        <button onClick={() => window.location.href = "/dashboard"} style={{ marginBottom: 20, border: "none", background: "#eee", padding: "10px 20px", borderRadius: 10, cursor: "pointer", fontWeight: "bold" }}>
+          ← Menu Principal
+        </button>
+
+        <div style={cardStyle}>
+          <h2 style={{ color: "#403d7c", marginTop: 0 }}>Vínculo de Atendimento</h2>
           
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20, marginTop: 20 }}>
-            
-            <div style={inputGroup}>
-              <label style={labelStyle}>Cidade (Busca SP)</label>
-              <input list="lista-cidades" value={cityInput} onChange={e => setCityInput(e.target.value)} placeholder="Ex: Jundiaí" style={inputStyle} />
-              <datalist id="lista-cidades">{cidadesSP.map((c, i) => <option key={i} value={c} />)}</datalist>
+          <div style={{ display: "grid", gap: 15, gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr" }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: "bold", color: "#64748b" }}>Cidade</label>
+              <input list="cidades" value={cityInput} onChange={e => setCityInput(e.target.value)} placeholder="Ex: Jundiaí" style={inputStyle} />
+              <datalist id="cidades">{cidadesSP.map(c => <option key={c} value={c} />)}</datalist>
             </div>
 
-            <div style={inputGroup}>
-              <label style={labelStyle}>Bairro ou Região</label>
-              <input value={neighborhood} onChange={e => setNeighborhood(e.target.value)} placeholder="Ex: Centro ou Todos" style={inputStyle} />
+            <div>
+              <label style={{ fontSize: 12, fontWeight: "bold", color: "#64748b" }}>Bairro (Opcional)</label>
+              <input value={neighborhood} onChange={e => setNeighborhood(e.target.value)} placeholder="Ex: Centro" style={inputStyle} />
             </div>
-            
-            <div style={inputGroup}>
-              <label style={labelStyle}>Rota</label>
+
+            <div>
+              <label style={{ fontSize: 12, fontWeight: "bold", color: "#64748b" }}>Rota</label>
               <select value={routeId} onChange={e => setRouteId(e.target.value)} style={inputStyle}>
-                <option value="">Selecione a Rota...</option>
+                <option value="">Selecione...</option>
                 {routes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
               </select>
             </div>
 
-            <div style={inputGroup}>
-              <label style={labelStyle}>Veículo</label>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: "bold", color: "#64748b" }}>Veículo</label>
               <select value={vehicleId} onChange={e => setVehicleId(e.target.value)} style={inputStyle}>
-                <option value="">Selecione o Veículo...</option>
+                <option value="">Selecione...</option>
                 {vehicles.map(v => <option key={v.id} value={v.id}>{v.name} ({v.plate})</option>)}
               </select>
             </div>
 
-            <div style={inputGroup}>
-              <label style={labelStyle}>Dia da Semana</label>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: "bold", color: "#64748b" }}>Dia da Semana</label>
               <select value={weekday} onChange={e => setWeekday(e.target.value)} style={inputStyle}>
-                <option value="">Selecione...</option>
+                <option value="">Escolha o dia...</option>
                 <option value="0">Segunda-feira</option>
                 <option value="1">Terça-feira</option>
                 <option value="2">Quarta-feira</option>
@@ -179,25 +149,21 @@ export default function VinculoRotas() {
             </div>
           </div>
 
-          <button onClick={salvarVinculo} disabled={salvando} style={btnPrincipal}>
-            {salvando ? "Salvando..." : editandoId ? "Atualizar" : "Salvar Vínculo"}
+          <button onClick={salvar} disabled={loading} style={{ width: "100%", marginTop: 25, padding: 15, background: "#403d7c", color: "#fff", border: "none", borderRadius: 12, fontWeight: "bold", cursor: "pointer" }}>
+            {loading ? "Processando..." : "Salvar Vínculo"}
           </button>
-          {editandoId && <button onClick={limparFormulario} style={{...btnCancel, width: '100%', marginTop: 10}}>Cancelar Edição</button>}
         </div>
 
-        {/* LISTA DE VÍNCULOS */}
-        <div style={{ display: "grid", gap: 12 }}>
+        {/* LISTA DE VÍNCULOS EXISTENTES */}
+        <div style={{ marginTop: 30 }}>
+          <h3 style={{ color: "#64748b" }}>Atendimentos Cadastrados</h3>
           {vinculos.map(v => (
-            <div key={v.id} style={cardStyle}>
-              <div style={{ borderLeft: "4px solid #403d7c", paddingLeft: 12 }}>
-                <div style={{ fontSize: 12, color: "#ed823c", fontWeight: "bold" }}>{v.route_name || v.route?.name}</div>
-                <div style={{ fontSize: 18, fontWeight: "bold", color: "#403d7c" }}>{v.city_name || v.city?.name}</div>
-                <div style={{ fontSize: 14, color: "#64748b" }}>{v.neighborhood_name || "Geral"}</div>
+            <div key={v.id} style={{ background: "#fff", padding: 15, borderRadius: 15, marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 2px 5px rgba(0,0,0,0.02)" }}>
+              <div>
+                <b style={{ color: "#403d7c" }}>{v.city_name}</b> - <span style={{ color: "#ed823c" }}>{v.route_name}</span>
+                <div style={{ fontSize: 12, color: "#94a3b8" }}>{v.neighborhood_name || "Geral"}</div>
               </div>
-              <div style={{ display: "flex", gap: 10 }}>
-                <button onClick={() => prepararEdicao(v)} style={btnAcao}>Editar</button>
-                <button onClick={() => excluir(v.id)} style={{...btnAcao, color: "#ef4444", background: "#fee2e2"}}>Excluir</button>
-              </div>
+              <button onClick={async () => { if(confirm("Excluir?")) { await api.delete(`/route-city-day/${v.id}/`); carregarDadosIniciais(); } }} style={{ border: "none", background: "#fee2e2", color: "#ef4444", padding: "8px 12px", borderRadius: 8, cursor: "pointer" }}>Excluir</button>
             </div>
           ))}
         </div>
@@ -205,12 +171,3 @@ export default function VinculoRotas() {
     </div>
   );
 }
-
-// Estilos
-const inputGroup = { display: "flex", flexDirection: "column", gap: 5 };
-const labelStyle = { fontSize: 12, fontWeight: "bold", color: "#64748b", marginLeft: 5 };
-const inputStyle = { padding: "12px", borderRadius: 12, border: "1px solid #ddd", fontSize: 15 };
-const btnPrincipal = { width: "100%", marginTop: 20, padding: "15px", borderRadius: 12, background: "#403d7c", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" };
-const btnCancel = { padding: "10px 20px", borderRadius: 12, border: "1px solid #ddd", background: "#fff", cursor: "pointer", fontWeight: "bold", color: "#403d7c" };
-const cardStyle = { background: "#fff", padding: "20px", borderRadius: 18, display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 4px 10px rgba(0,0,0,0.02)" };
-const btnAcao = { padding: "8px 12px", borderRadius: 8, border: "none", cursor: "pointer", fontWeight: "bold", fontSize: 13, background: "#f1f5f9", color: "#403d7c" };
