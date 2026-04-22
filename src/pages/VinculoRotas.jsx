@@ -37,7 +37,6 @@ export default function VinculoRotas() {
   async function carregarDadosIniciais() {
     try {
       setLoading(true);
-      // CORREÇÃO: Alterado de /route-neighborhoods/ para /route-city-day/
       const [r, v, vi] = await Promise.all([
         api.get("/routes/"),
         api.get("/vehicles/"),
@@ -77,12 +76,9 @@ export default function VinculoRotas() {
         route_id: Number(routeId),
         vehicle_id: Number(vehicleId),
         city_id: cityId,
-        // Bairro é opcional, se estiver vazio enviamos null
-        neighborhood_id: null, 
         weekday: Number(weekday),
       };
 
-      // CORREÇÃO: Rota correta /route-city-day/
       if (editandoId) {
         await api.patch(`/route-city-day/${editandoId}/`, payload);
       } else {
@@ -99,6 +95,24 @@ export default function VinculoRotas() {
     }
   }
 
+  function prepararEdicao(item) {
+    setEditandoId(item.id);
+    setRouteId(item.route_id);
+    setVehicleId(item.vehicle_id);
+    setCityInput(item.city_name || ""); 
+    setWeekday(item.weekday);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function limparFormulario() {
+    setEditandoId(null);
+    setRouteId("");
+    setVehicleId("");
+    setCityInput("");
+    setNeighborhood("");
+    setWeekday("");
+  }
+
   async function excluir(id) {
     if (!window.confirm("Deseja excluir?")) return;
     try {
@@ -107,6 +121,61 @@ export default function VinculoRotas() {
     } catch { alert("Erro ao excluir"); }
   }
 
-  // ... (Mantenha o restante do seu código de interface/JSX igual ao que você enviou)
-  // Certifique-se apenas de que o mapeamento da lista use os nomes de campos que vêm do back
-  // ex: v.route?.name em vez de v.route_name se o objeto for aninhado.
+  return (
+    <div style={{ minHeight: "100vh", background: "#f8f7fc", padding: isMobile ? "15px" : "30px", fontFamily: "Arial" }}>
+      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+        <button onClick={() => window.location.href = "/dashboard"} style={btnCancel}>← Menu Principal</button>
+        
+        <div style={{ background: "#fff", padding: 30, borderRadius: 24, boxShadow: "0 10px 30px rgba(0,0,0,0.05)", marginBottom: 25, marginTop: 20 }}>
+          <h1 style={{ color: "#403d7c", fontSize: 24 }}>Vínculo de Atendimento</h1>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20, marginTop: 20 }}>
+            <input list="lista-cidades" value={cityInput} onChange={e => setCityInput(e.target.value)} placeholder="Cidade" style={inputStyle} />
+            <datalist id="lista-cidades">{cidadesSP.map((c, i) => <option key={i} value={c} />)}</datalist>
+            
+            <select value={routeId} onChange={e => setRouteId(e.target.value)} style={inputStyle}>
+              <option value="">Selecione a Rota...</option>
+              {routes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+            </select>
+
+            <select value={vehicleId} onChange={e => setVehicleId(e.target.value)} style={inputStyle}>
+              <option value="">Selecione o Veículo...</option>
+              {vehicles.map(v => <option key={v.id} value={v.id}>{v.name} ({v.plate})</option>)}
+            </select>
+
+            <select value={weekday} onChange={e => setWeekday(e.target.value)} style={inputStyle}>
+              <option value="">Dia da Semana...</option>
+              <option value="0">Segunda-feira</option>
+              <option value="1">Terça-feira</option>
+              <option value="2">Quarta-feira</option>
+              <option value="3">Quinta-feira</option>
+              <option value="4">Sexta-feira</option>
+              <option value="7">Todos os dias</option>
+            </select>
+          </div>
+          <button onClick={salvarVinculo} disabled={salvando} style={btnPrincipal}>{salvando ? "Salvando..." : "Salvar Vínculo"}</button>
+        </div>
+
+        <div style={{ display: "grid", gap: 12 }}>
+          {vinculos.map(v => (
+            <div key={v.id} style={cardStyle}>
+              <div>
+                <b style={{ color: "#ed823c" }}>{v.route?.name || "Sem Rota"}</b>
+                <div style={{ fontSize: 18, fontWeight: "bold" }}>{v.city?.name}</div>
+              </div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button onClick={() => prepararEdicao(v)} style={btnAcao}>Editar</button>
+                <button onClick={() => excluir(v.id)} style={{...btnAcao, color: "red"}}>Excluir</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const inputStyle = { padding: "12px", borderRadius: 12, border: "1px solid #ddd" };
+const btnPrincipal = { width: "100%", marginTop: 20, padding: "15px", borderRadius: 12, background: "#403d7c", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" };
+const btnCancel = { padding: "10px 20px", borderRadius: 12, border: "1px solid #ddd", background: "#fff", cursor: "pointer" };
+const cardStyle = { background: "#fff", padding: 20, borderRadius: 18, display: "flex", justifyContent: "space-between", alignItems: "center" };
+const btnAcao = { padding: "8px 12px", borderRadius: 8, border: "none", cursor: "pointer", fontWeight: "bold" };
